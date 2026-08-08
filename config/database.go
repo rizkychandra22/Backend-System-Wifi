@@ -20,9 +20,9 @@ func ConnectDatabase() *gorm.DB {
 	}
 
 	host := os.Getenv("DB_HOST")
-	user := os.Getenv("DB_USER")
+	user := os.Getenv("DB_USERNAME")
 	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
+	dbname := os.Getenv("DB_DATABASE")
 	port := os.Getenv("DB_PORT")
 	sslmode := os.Getenv("DB_SSLMODE")
 
