@@ -13,7 +13,6 @@ import (
 var DB *gorm.DB
 
 func ConnectDatabase() *gorm.DB {
-	// Memuat file .env (jika ada)
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Peringatan: File .env tidak ditemukan, menggunakan environment variable dari sistem")

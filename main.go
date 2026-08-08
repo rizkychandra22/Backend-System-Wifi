@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend-wifi/config"
+	"backend-wifi/models"
 	"log"
 	"net/http"
 
@@ -9,9 +10,13 @@ import (
 )
 
 func main() {
-	// Koneksi ke Database PostgreSQL
 	db := config.ConnectDatabase()
-	_ = db // Temporary fix to prevent unused variable error
+
+	// Auto Migrate Schema
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		log.Fatalf("Gagal melakukan migrasi database: %v", err)
+	}
+	log.Println("Migrasi database berhasil")
 
 	r := gin.Default()
 
