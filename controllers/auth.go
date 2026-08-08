@@ -30,15 +30,17 @@ func Login(c *gin.Context) {
 
 	clientIP := c.ClientIP()
 
-	// Device IP Lock Logic
-	if user.IPAddress == nil || *user.IPAddress == "" {
-		// First time login, save this IP
-		user.IPAddress = &clientIP
-		config.DB.Save(&user)
-	} else if *user.IPAddress != clientIP {
-		// IP mismatch, block login
-		c.JSON(http.StatusForbidden, gin.H{"error": "Akun ini sudah login di device lain. Silakan hubungi Admin."})
-		return
+	// Device IP Lock Logic (Admin dibebaskan dari lock device)
+	if user.Role != "admin" {
+		if user.IPAddress == nil || *user.IPAddress == "" {
+			// First time login, save this IP
+			user.IPAddress = &clientIP
+			config.DB.Save(&user)
+		} else if *user.IPAddress != clientIP {
+			// IP mismatch, block login
+			c.JSON(http.StatusForbidden, gin.H{"error": "Akun ini sudah login di device lain. Silakan hubungi Admin."})
+			return
+		}
 	}
 
 	// Generate JWT Token
