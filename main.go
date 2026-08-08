@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend-wifi/routes"
 	"backend-wifi/config"
 	"backend-wifi/models"
 	"log"
@@ -19,6 +20,10 @@ func main() {
 	log.Println("Migrasi database berhasil")
 
 	r := gin.Default()
+
+	// Setup Routes
+	routes.SetupAuthRoutes(r)
+	routes.SetupUserRoutes(r)
 
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
