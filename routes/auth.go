@@ -9,6 +9,6 @@ import (
 func SetupAuthRoutes(r *gin.Engine) {
 	authRoutes := r.Group("/api/auth")
 	{
-		authRoutes.POST("/controllers.Login", controllers.Login)
+		authRoutes.POST("/login", controllers.Login)
 	}
 }
