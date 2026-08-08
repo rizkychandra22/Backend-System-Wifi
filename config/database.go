@@ -29,7 +29,10 @@ func ConnectDatabase() *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s poolmode=%s",
 		host, user, password, dbname, port, sslmode, poolmode)
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{})
 
 	if err != nil {
 		log.Fatal("Gagal terkoneksi ke database PostgreSQL:", err)
