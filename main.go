@@ -6,6 +6,7 @@ import (
 	"backend-wifi/models"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -36,8 +37,13 @@ func main() {
 		})
 	})
 
-	log.Println("Server is running on port 8080...")
-	if err := r.Run(":8080"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("Server is running on port " + port + "...")
+	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
