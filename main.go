@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +21,9 @@ func main() {
 	log.Println("Migrasi database berhasil")
 
 	r := gin.Default()
+
+	// Enable CORS untuk semua origin (agar Vite/React di port 5173 bisa menembak API)
+	r.Use(cors.Default())
 
 	// Setup Routes
 	routes.SetupAuthRoutes(r)
