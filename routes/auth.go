@@ -19,11 +19,4 @@ func SetupAuthRoutes(r *gin.Engine) {
 			protectedAuth.PUT("/profile", controllers.UpdateProfile)
 		}
 	}
-
-	// Upload endpoint (Requires authentication)
-	uploadRoutes := r.Group("/api")
-	uploadRoutes.Use(middlewares.RequireAuth)
-	{
-		uploadRoutes.POST("/upload", controllers.UploadFile)
-	}
 }

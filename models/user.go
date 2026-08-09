@@ -20,7 +20,6 @@ type User struct {
 	Phone          string         `gorm:"type:varchar(20);uniqueIndex;not null" json:"phone"`
 	Role           Role           `gorm:"type:varchar(20);not null;default:'customer'" json:"role"`
 	Address        *string        `gorm:"type:text" json:"address"`
-	ProfilePicture *string        `gorm:"type:text" json:"profile_picture"`
 	IPAddress      *string        `gorm:"type:varchar(45)" json:"ip_address"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`

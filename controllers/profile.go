@@ -27,7 +27,6 @@ func UpdateProfile(c *gin.Context) {
 		Name           *string `json:"name"`
 		Phone          *string `json:"phone"`
 		Address        *string `json:"address"`
-		ProfilePicture *string `json:"profile_picture"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -43,9 +42,6 @@ func UpdateProfile(c *gin.Context) {
 	}
 	if input.Address != nil {
 		user.Address = input.Address
-	}
-	if input.ProfilePicture != nil {
-		user.ProfilePicture = input.ProfilePicture
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
