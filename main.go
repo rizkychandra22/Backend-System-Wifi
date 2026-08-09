@@ -26,6 +26,9 @@ func main() {
 	// Enable CORS untuk semua origin (agar Vite/React di port 5173 bisa menembak API)
 	r.Use(cors.Default())
 
+	// Serve static files from uploads directory
+	r.Static("/uploads", "./uploads")
+
 	// Setup Routes
 	routes.SetupAuthRoutes(r)
 	routes.SetupUserRoutes(r)

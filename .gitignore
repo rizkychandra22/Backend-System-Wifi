@@ -16,3 +16,4 @@
 
 # Environment files
 .env
+.air.toml
