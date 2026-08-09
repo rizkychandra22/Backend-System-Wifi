@@ -10,16 +10,32 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
 	db := config.ConnectDatabase()
 
 	// Auto Migrate Schema
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.IPLockout{}); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 	log.Println("Migrasi database berhasil")
+
+	var count int64
+	db.Model(&models.User{}).Where("role = ?", "admin").Count(&count)
+	if count == 0 {
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		passwordStr := string(hashedPassword)
+		admin := models.User{
+			Name:     "Admin Utama",
+			Phone:    "081234567890",
+			Role:     models.RoleAdmin,
+			Password: &passwordStr,
+		}
+		db.Create(&admin)
+		log.Println("Akun Admin default berhasil dibuat (Phone: 081234567890)")
+	}
 
 	r := gin.Default()
 

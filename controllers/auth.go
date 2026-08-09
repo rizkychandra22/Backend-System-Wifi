@@ -9,17 +9,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Login function for all users (using phone number)
 func Login(c *gin.Context) {
 	var input struct {
-		Phone string `json:"phone" binding:"required"`
+		Phone    string  `json:"phone" binding:"required"`
+		Password *string `json:"password"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	clientIP := c.ClientIP()
+
+	// 1. Cek tabel IPLockout
+	var lockout models.IPLockout
+	if err := config.DB.Where("ip_address = ?", clientIP).First(&lockout).Error; err == nil {
+		if lockout.LockedUntil.After(time.Now()) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Anda diblokir karena mencoba mengakses halaman admin tanpa izin."})
+			return
+		}
 	}
 
 	var user models.User
@@ -28,10 +41,61 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	clientIP := c.ClientIP()
+	if user.Role == "admin" {
+		// Cek IP: apakah terikat dengan customer/employee
+		var existingUser models.User
+		if err := config.DB.Where("ip_address = ? AND role != ?", clientIP, "admin").First(&existingUser).Error; err == nil {
+			// IP ini dipakai oleh customer/employee! Blokir IP 1 hari
+			lockedUntil := time.Now().Add(24 * time.Hour)
+			if lockout.ID != 0 {
+				lockout.LockedUntil = lockedUntil
+				config.DB.Save(&lockout)
+			} else {
+				newLockout := models.IPLockout{
+					IPAddress:   clientIP,
+					LockedUntil: lockedUntil,
+				}
+				config.DB.Create(&newLockout)
+			}
+			c.JSON(http.StatusForbidden, gin.H{"error": "Anda sebagai " + string(existingUser.Role) + " tidak memiliki akses untuk ke halaman admin"})
+			return
+		}
 
-	// Device IP Lock Logic (Admin dibebaskan dari lock device)
-	if user.Role != "admin" {
+		// Cek status terkunci
+		if user.LockedUntil != nil && user.LockedUntil.After(time.Now()) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Akun terkunci karena terlalu banyak percobaan salah. Coba lagi dalam 30 menit."})
+			return
+		}
+
+		// Cek Password kosong
+		if input.Password == nil || *input.Password == "" {
+			c.JSON(http.StatusPreconditionRequired, gin.H{"error": "Password diperlukan untuk akun Admin", "requires_password": true})
+			return
+		}
+
+		// Validasi Password
+		if user.Password == nil || bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(*input.Password)) != nil {
+			user.FailedLoginAttempts++
+			if user.FailedLoginAttempts >= 5 {
+				lockedTime := time.Now().Add(30 * time.Minute)
+				user.LockedUntil = &lockedTime
+				user.FailedLoginAttempts = 0
+				config.DB.Save(&user)
+				c.JSON(http.StatusForbidden, gin.H{"error": "Terlalu banyak percobaan salah. Akun terkunci selama 30 menit."})
+				return
+			}
+			config.DB.Save(&user)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Password salah"})
+			return
+		}
+
+		// Benar password
+		user.FailedLoginAttempts = 0
+		user.LockedUntil = nil
+		config.DB.Save(&user)
+
+	} else {
+		// Device IP Lock Logic (Admin dibebaskan dari lock device)
 		if user.IPAddress == nil || *user.IPAddress == "" {
 			// First time login, save this IP
 			user.IPAddress = &clientIP
