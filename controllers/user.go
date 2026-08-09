@@ -73,7 +73,6 @@ func UpdateUser(c *gin.Context) {
 		Phone          *string      `json:"phone"`
 		Role           *models.Role `json:"role"`
 		Address        *string      `json:"address"`
-		ProfilePicture *string      `json:"profile_picture"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -93,10 +92,6 @@ func UpdateUser(c *gin.Context) {
 	if input.Address != nil {
 		user.Address = input.Address
 	}
-	if input.ProfilePicture != nil {
-		user.ProfilePicture = input.ProfilePicture
-	}
-
 	if err := config.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return

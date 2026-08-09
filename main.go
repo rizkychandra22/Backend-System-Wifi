@@ -23,8 +23,11 @@ func main() {
 
 	r := gin.Default()
 
-	// Enable CORS untuk semua origin (agar Vite/React di port 5173 bisa menembak API)
-	r.Use(cors.Default())
+	// Enable CORS untuk semua origin dan izinkan header Authorization
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(corsConfig))
 
 	// Setup Routes
 	routes.SetupAuthRoutes(r)
