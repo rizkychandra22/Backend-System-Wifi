@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"backend-wifi/config"
-	"backend-wifi/models"
+	"backend-wifi/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // UpdateProfile allows a user to update their own profile
@@ -18,16 +16,10 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
 	var input struct {
-		Name           *string `json:"name"`
-		Phone          *string `json:"phone"`
-		Address        *string `json:"address"`
+		Name    *string `json:"name"`
+		Phone   *string `json:"phone"`
+		Address *string `json:"address"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -35,18 +27,9 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	if input.Name != nil {
-		user.Name = *input.Name
-	}
-	if input.Phone != nil {
-		user.Phone = *input.Phone
-	}
-	if input.Address != nil {
-		user.Address = input.Address
-	}
-
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+	user, appErr := services.UpdateProfile(userID.(float64), input.Name, input.Phone, input.Address)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -63,17 +46,6 @@ func UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	if user.Role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Fitur ganti password hanya untuk admin"})
-		return
-	}
-
 	var input struct {
 		OldPassword string `json:"old_password" binding:"required"`
 		NewPassword string `json:"new_password" binding:"required"`
@@ -84,22 +56,9 @@ func UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	if user.Password == nil || bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(input.OldPassword)) != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Password lama salah"})
-		return
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengenkripsi password"})
-		return
-	}
-
-	passwordStr := string(hashedPassword)
-	user.Password = &passwordStr
-
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan password baru"})
+	appErr := services.UpdatePassword(userID.(float64), input.OldPassword, input.NewPassword)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
