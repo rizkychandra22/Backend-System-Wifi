@@ -13,13 +13,6 @@ import (
 )
 
 func Login(phone string, password *string, clientIP string) (map[string]interface{}, *utils.AppError) {
-	// 1. Cek tabel IPLockout
-	var lockout models.IPLockout
-	if err := config.DB.Where("ip_address = ?", clientIP).First(&lockout).Error; err == nil {
-		if lockout.LockedUntil.After(time.Now()) {
-			return nil, utils.NewAppError(http.StatusForbidden, "Anda diblokir karena mencoba mengakses halaman admin tanpa izin.")
-		}
-	}
 
 	var user models.User
 	if err := config.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
@@ -27,24 +20,6 @@ func Login(phone string, password *string, clientIP string) (map[string]interfac
 	}
 
 	if user.Role == "admin" {
-		// Cek IP: apakah terikat dengan customer/employee
-		var existingUser models.User
-		if err := config.DB.Where("ip_address = ? AND role != ?", clientIP, "admin").First(&existingUser).Error; err == nil {
-			// IP ini dipakai oleh customer/employee! Blokir IP 1 hari
-			lockedUntil := time.Now().Add(24 * time.Hour)
-			if lockout.ID != 0 {
-				lockout.LockedUntil = lockedUntil
-				config.DB.Save(&lockout)
-			} else {
-				newLockout := models.IPLockout{
-					IPAddress:   clientIP,
-					LockedUntil: lockedUntil,
-				}
-				config.DB.Create(&newLockout)
-			}
-			return nil, utils.NewAppError(http.StatusForbidden, "Anda sebagai "+string(existingUser.Role)+" tidak memiliki akses untuk ke halaman admin")
-		}
-
 		// Cek status terkunci
 		if user.LockedUntil != nil && user.LockedUntil.After(time.Now()) {
 			return nil, utils.NewAppError(http.StatusForbidden, "Akun terkunci karena terlalu banyak percobaan salah. Coba lagi dalam 30 menit.")
