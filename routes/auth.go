@@ -17,6 +17,7 @@ func SetupAuthRoutes(r *gin.Engine) {
 		protectedAuth.Use(middlewares.RequireAuth)
 		{
 			protectedAuth.PUT("/profile", controllers.UpdateProfile)
+			protectedAuth.PUT("/profile/password", controllers.UpdatePassword)
 		}
 	}
 }
