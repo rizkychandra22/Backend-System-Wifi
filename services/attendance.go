@@ -112,15 +112,15 @@ func ClockOut(userID float64, lat, lng float64) (*models.Attendance, *utils.AppE
 		return nil, utils.NewAppError(http.StatusConflict, "Anda sudah melakukan absen keluar hari ini")
 	}
 
-	// Jam keluar harus antara 16:00 sampai 18:00
+	// Jam keluar harus antara 16:00 sampai 17:00
 	time1600 := time.Date(now.Year(), now.Month(), now.Day(), 16, 0, 0, 0, locWIB)
-	time1800 := time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, locWIB)
+	time1700 := time.Date(now.Year(), now.Month(), now.Day(), 17, 0, 0, 0, locWIB)
 
 	if now.Before(time1600) {
 		return nil, utils.NewAppError(http.StatusForbidden, "Absen keluar hanya dapat dilakukan mulai jam 16:00")
 	}
-	if now.After(time1800) {
-		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen keluar (18:00) telah lewat")
+	if now.After(time1700) {
+		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen keluar (17:00) telah lewat. Sistem akan otomatis mencatat absen keluar Anda.")
 	}
 
 	// Validasi Jarak

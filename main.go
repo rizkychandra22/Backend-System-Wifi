@@ -1,9 +1,11 @@
 package main
 
 import (
-	"backend-wifi/routes"
 	"backend-wifi/config"
+	"backend-wifi/helpers"
 	"backend-wifi/models"
+	"backend-wifi/models/seeder"
+	"backend-wifi/routes"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +14,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -24,20 +25,8 @@ func main() {
 	}
 	log.Println("Migrasi database berhasil")
 
-	var count int64
-	db.Model(&models.User{}).Where("role = ?", "admin").Count(&count)
-	if count == 0 {
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-		passwordStr := string(hashedPassword)
-		admin := models.User{
-			Name:     "Admin Utama",
-			Phone:    "081234567890",
-			Role:     models.RoleAdmin,
-			Password: &passwordStr,
-		}
-		db.Create(&admin)
-		log.Println("Akun Admin default berhasil dibuat (Phone: 081234567890)")
-	}
+	// Seed Initial Data
+	seeder.SeedAdminUser(db)
 
 	r := gin.Default()
 
@@ -60,28 +49,10 @@ func main() {
 	c := cron.New(cron.WithLocation(locWIB))
 	
 	// Cek hari libur jam 08:31 setiap hari
-	c.AddFunc("31 8 * * *", func() {
-		dateStr := time.Now().In(locWIB).Format("2006-01-02")
-		var count int64
-		config.DB.Model(&models.Attendance{}).Where("date = ? AND status = ?", dateStr, models.StatusHadir).Count(&count)
-		if count == 0 {
-			holiday := models.Attendance{
-				Date:   dateStr,
-				Status: models.StatusLibur,
-			}
-			config.DB.Create(&holiday)
-			log.Println("Hari ini otomatis diset sebagai Hari Libur")
-		}
-	})
+	c.AddFunc("31 8 * * *", helpers.CheckAutoHoliday)
 
-	// Cek auto absen keluar jam 18:01 setiap hari
-	c.AddFunc("1 18 * * *", func() {
-		dateStr := time.Now().In(locWIB).Format("2006-01-02")
-		config.DB.Model(&models.Attendance{}).
-			Where("date = ? AND status = ?", dateStr, models.StatusHadir).
-			Update("status", models.StatusSelesai)
-		log.Println("Proses auto absen keluar selesai")
-	})
+	// Cek auto absen keluar jam 17:01 setiap hari
+	c.AddFunc("1 17 * * *", helpers.AutoCheckout)
 
 	c.Start()
 
