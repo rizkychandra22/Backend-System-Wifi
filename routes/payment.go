@@ -11,8 +11,8 @@ func SetupPaymentRoutes(r *gin.Engine) {
 	paymentRoutes.Use(middlewares.RequireAuth)
 	{
 		// Admin full CRUD
-		paymentRoutes.GET("", middlewares.RequireRole("admin"), controllers.GetAllPayments)
-		paymentRoutes.POST("", middlewares.RequireRole("admin"), controllers.CreatePayment)
+		paymentRoutes.GET("/", middlewares.RequireRole("admin"), controllers.GetAllPayments)
+		paymentRoutes.POST("/", middlewares.RequireRole("admin"), controllers.CreatePayment)
 		paymentRoutes.PUT("/:id", middlewares.RequireRole("admin"), controllers.UpdatePayment)
 		paymentRoutes.DELETE("/:id", middlewares.RequireRole("admin"), controllers.DeletePayment)
 		
