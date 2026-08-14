@@ -12,7 +12,7 @@ import (
 func CreatePayment(c *gin.Context) {
 	var input struct {
 		CustomerID    uint `json:"customer_id" binding:"required"`
-		WifiServiceID uint `json:"wifi_service_id" binding:"required"`
+		WifiPackageID uint `json:"wifi_package_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -20,7 +20,7 @@ func CreatePayment(c *gin.Context) {
 		return
 	}
 
-	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiServiceID)
+	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiPackageID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -76,8 +76,8 @@ func GeneratePaymentPDF(c *gin.Context) {
 	pdf.Cell(40, 10, "Detail Layanan")
 	pdf.Ln(8)
 	pdf.SetFont("Arial", "", 12)
-	if payment.WifiService != nil {
-		pdf.Cell(40, 10, fmt.Sprintf("Paket: %s", payment.WifiService.Name))
+	if payment.WifiPackage != nil {
+		pdf.Cell(40, 10, fmt.Sprintf("Paket: %s", payment.WifiPackage.Name))
 	}
 
 	pdf.Ln(12)

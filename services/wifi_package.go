@@ -7,24 +7,24 @@ import (
 	"net/http"
 )
 
-func CreateWifiService(name string, price float64) (*models.WifiService, *utils.AppError) {
-	ws := models.WifiService{Name: name, Price: price}
+func CreateWifiPackage(name string, price float64) (*models.WifiPackage, *utils.AppError) {
+	ws := models.WifiPackage{Name: name, Price: price}
 	if err := config.DB.Create(&ws).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to create wifi service")
 	}
 	return &ws, nil
 }
 
-func GetWifiServices() ([]models.WifiService, *utils.AppError) {
-	var ws []models.WifiService
+func GetWifiPackages() ([]models.WifiPackage, *utils.AppError) {
+	var ws []models.WifiPackage
 	if err := config.DB.Find(&ws).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve wifi services")
 	}
 	return ws, nil
 }
 
-func UpdateWifiService(id string, name *string, price *float64) (*models.WifiService, *utils.AppError) {
-	var ws models.WifiService
+func UpdateWifiPackage(id string, name *string, price *float64) (*models.WifiPackage, *utils.AppError) {
+	var ws models.WifiPackage
 	if err := config.DB.First(&ws, id).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Wifi service not found")
 	}
@@ -41,8 +41,8 @@ func UpdateWifiService(id string, name *string, price *float64) (*models.WifiSer
 	return &ws, nil
 }
 
-func DeleteWifiService(id string) *utils.AppError {
-	var ws models.WifiService
+func DeleteWifiPackage(id string) *utils.AppError {
+	var ws models.WifiPackage
 	if err := config.DB.First(&ws, id).Error; err != nil {
 		return utils.NewAppError(http.StatusNotFound, "Wifi service not found")
 	}

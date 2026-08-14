@@ -6,14 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupWifiServiceRoutes(r *gin.Engine) {
-	wsRoutes := r.Group("/api/admin/wifi-services")
+func SetupWifiPackageRoutes(r *gin.Engine) {
+	wsRoutes := r.Group("/api/admin/wifi-packages")
 	wsRoutes.Use(middlewares.RequireAuth)
 	wsRoutes.Use(middlewares.RequireRole("admin"))
 	{
-		wsRoutes.POST("", controllers.CreateWifiService)
-		wsRoutes.GET("", controllers.GetWifiServices)
-		wsRoutes.PUT("/:id", controllers.UpdateWifiService)
-		wsRoutes.DELETE("/:id", controllers.DeleteWifiService)
+		wsRoutes.POST("", controllers.CreateWifiPackage)
+		wsRoutes.GET("", controllers.GetWifiPackages)
+		wsRoutes.PUT("/:id", controllers.UpdateWifiPackage)
+		wsRoutes.DELETE("/:id", controllers.DeleteWifiPackage)
 	}
 }

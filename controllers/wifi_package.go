@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateWifiService(c *gin.Context) {
+func CreateWifiPackage(c *gin.Context) {
 	var input struct {
 		Name  string  `json:"name" binding:"required"`
 		Price float64 `json:"price" binding:"required"`
@@ -18,7 +18,7 @@ func CreateWifiService(c *gin.Context) {
 		return
 	}
 
-	ws, appErr := services.CreateWifiService(input.Name, input.Price)
+	ws, appErr := services.CreateWifiPackage(input.Name, input.Price)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -27,8 +27,8 @@ func CreateWifiService(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Wifi service created", "data": ws})
 }
 
-func GetWifiServices(c *gin.Context) {
-	ws, appErr := services.GetWifiServices()
+func GetWifiPackages(c *gin.Context) {
+	ws, appErr := services.GetWifiPackages()
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -37,7 +37,7 @@ func GetWifiServices(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": ws})
 }
 
-func UpdateWifiService(c *gin.Context) {
+func UpdateWifiPackage(c *gin.Context) {
 	var input struct {
 		Name  *string  `json:"name"`
 		Price *float64 `json:"price"`
@@ -48,7 +48,7 @@ func UpdateWifiService(c *gin.Context) {
 		return
 	}
 
-	ws, appErr := services.UpdateWifiService(c.Param("id"), input.Name, input.Price)
+	ws, appErr := services.UpdateWifiPackage(c.Param("id"), input.Name, input.Price)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -57,8 +57,8 @@ func UpdateWifiService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Wifi service updated", "data": ws})
 }
 
-func DeleteWifiService(c *gin.Context) {
-	appErr := services.DeleteWifiService(c.Param("id"))
+func DeleteWifiPackage(c *gin.Context) {
+	appErr := services.DeleteWifiPackage(c.Param("id"))
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return

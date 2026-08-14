@@ -19,7 +19,7 @@ func main() {
 	db := config.ConnectDatabase()
 
 	// Auto Migrate Schema
-	if err := db.AutoMigrate(&models.User{}, &models.IPLockout{}, &models.Attendance{}, &models.WifiService{}, &models.Payment{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.IPLockout{}, &models.Attendance{}, &models.WifiPackage{}, &models.Payment{}); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 	log.Println("Migrasi database berhasil")
@@ -52,7 +52,7 @@ func main() {
 	routes.SetupUserRoutes(r)
 	routes.SetupAttendanceRoutes(r)
 	routes.SetupCustomerRoutes(r)
-	routes.SetupWifiServiceRoutes(r)
+	routes.SetupWifiPackageRoutes(r)
 	routes.SetupPaymentRoutes(r)
 
 	// Setup Scheduler for Attendance

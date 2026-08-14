@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type WifiService struct {
+type WifiPackage struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Name      string         `gorm:"type:varchar(100);not null" json:"name"`
 	Price     float64        `gorm:"not null" json:"price"` // e.g. 150000
