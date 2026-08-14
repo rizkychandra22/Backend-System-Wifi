@@ -22,7 +22,10 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, appErr := services.CreateUser(input.Name, input.Phone, input.Role, input.Address)
+	userIDClaim, _ := c.Get("userID")
+	userID         := uint(userIDClaim.(float64))
+
+	user, appErr := services.CreateUser(input.Name, input.Phone, input.Role, input.Address, &userID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return

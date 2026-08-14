@@ -7,12 +7,13 @@ import (
 	"net/http"
 )
 
-func CreateUser(name, phone string, role models.Role, address *string) (*models.User, *utils.AppError) {
+func CreateUser(name, phone string, role models.Role, address *string, registeredByID *uint) (*models.User, *utils.AppError) {
 	user := models.User{
-		Name:    name,
-		Phone:   phone,
-		Role:    role,
-		Address: address,
+		Name:           name,
+		Phone:          phone,
+		Role:           role,
+		Address:        address,
+		RegisteredByID: registeredByID,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -24,7 +25,7 @@ func CreateUser(name, phone string, role models.Role, address *string) (*models.
 
 func GetUsers() ([]models.User, *utils.AppError) {
 	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
+	if err := config.DB.Preload("RegisteredBy").Find(&users).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve users")
 	}
 	return users, nil
