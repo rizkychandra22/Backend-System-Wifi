@@ -24,6 +24,8 @@ type User struct {
 	LockedUntil         *time.Time     `json:"locked_until,omitempty"`
 	Address             *string        `gorm:"type:text" json:"address"`
 	IPAddress           *string        `gorm:"type:varchar(45)" json:"ip_address"`
+	RegisteredByID      *uint          `json:"registered_by_id,omitempty"`
+	RegisteredBy        *User          `gorm:"foreignKey:RegisteredByID" json:"registered_by,omitempty"`
 	CreatedAt           time.Time      `json:"created_at"`
 	UpdatedAt           time.Time      `json:"updated_at"`
 	DeletedAt           gorm.DeletedAt `gorm:"index" json:"-"`
