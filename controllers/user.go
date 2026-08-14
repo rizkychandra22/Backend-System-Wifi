@@ -1,9 +1,8 @@
 package controllers
 
 import (
-	"backend-wifi/config"
 	"backend-wifi/models"
-	
+	"backend-wifi/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,15 +22,12 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	user := models.User{
-		Name:    input.Name,
-		Phone:   input.Phone,
-		Role:    input.Role,
-		Address: input.Address,
-	}
+	userIDClaim, _ := c.Get("userID")
+	userID         := uint(userIDClaim.(float64))
 
-	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+	user, appErr := services.CreateUser(input.Name, input.Phone, input.Role, input.Address, &userID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -40,9 +36,9 @@ func CreateUser(c *gin.Context) {
 
 // Get all users
 func GetUsers(c *gin.Context) {
-	var users []models.User
-	if err := config.DB.Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+	users, appErr := services.GetUsers()
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -51,9 +47,9 @@ func GetUsers(c *gin.Context) {
 
 // Get user by ID
 func GetUserByID(c *gin.Context) {
-	var user models.User
-	if err := config.DB.First(&user, c.Param("id")).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	user, appErr := services.GetUserByID(c.Param("id"))
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -62,18 +58,11 @@ func GetUserByID(c *gin.Context) {
 
 // Update User
 func UpdateUser(c *gin.Context) {
-	var user models.User
-	if err := config.DB.First(&user, c.Param("id")).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
 	var input struct {
-		Name           *string      `json:"name"`
-		Phone          *string      `json:"phone"`
-		Role           *models.Role `json:"role"`
-		Address        *string      `json:"address"`
-		ProfilePicture *string      `json:"profile_picture"`
+		Name    *string      `json:"name"`
+		Phone   *string      `json:"phone"`
+		Role    *models.Role `json:"role"`
+		Address *string      `json:"address"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -81,24 +70,9 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	if input.Name != nil {
-		user.Name = *input.Name
-	}
-	if input.Phone != nil {
-		user.Phone = *input.Phone
-	}
-	if input.Role != nil {
-		user.Role = *input.Role
-	}
-	if input.Address != nil {
-		user.Address = input.Address
-	}
-	if input.ProfilePicture != nil {
-		user.ProfilePicture = input.ProfilePicture
-	}
-
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+	user, appErr := services.UpdateUser(c.Param("id"), input.Name, input.Phone, input.Role, input.Address)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -107,14 +81,9 @@ func UpdateUser(c *gin.Context) {
 
 // Delete User
 func DeleteUser(c *gin.Context) {
-	var user models.User
-	if err := config.DB.First(&user, c.Param("id")).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	if err := config.DB.Delete(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+	appErr := services.DeleteUser(c.Param("id"))
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 
@@ -123,15 +92,9 @@ func DeleteUser(c *gin.Context) {
 
 // Reset User IP (Admin only) - Digunakan jika device pengguna hilang/rusak
 func ResetUserIP(c *gin.Context) {
-	var user models.User
-	if err := config.DB.First(&user, c.Param("id")).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	user.IPAddress = nil
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset user IP"})
+	appErr := services.ResetUserIP(c.Param("id"))
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
 	}
 

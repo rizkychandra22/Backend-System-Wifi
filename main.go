@@ -1,34 +1,60 @@
 package main
 
 import (
-	"backend-wifi/routes"
 	"backend-wifi/config"
+	"backend-wifi/helpers"
 	"backend-wifi/models"
+	"backend-wifi/models/seeder"
+	"backend-wifi/routes"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
 	db := config.ConnectDatabase()
 
 	// Auto Migrate Schema
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.IPLockout{}, &models.Attendance{}, &models.WifiPackage{}, &models.Payment{}); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 	log.Println("Migrasi database berhasil")
 
+	// Seed Initial Data
+	seeder.SeedAdminUser(db)
+
 	r := gin.Default()
 
-	// Enable CORS untuk semua origin (agar Vite/React di port 5173 bisa menembak API)
-	r.Use(cors.Default())
+	// Enable CORS untuk semua origin dan izinkan header Authorization
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(corsConfig))
 
 	// Setup Routes
 	routes.SetupAuthRoutes(r)
 	routes.SetupUserRoutes(r)
+	routes.SetupAttendanceRoutes(r)
+	routes.SetupCustomerRoutes(r)
+	routes.SetupWifiPackageRoutes(r)
+	routes.SetupPaymentRoutes(r)
+
+	// Setup Scheduler for Attendance
+	locWIB, _ := time.LoadLocation("Asia/Jakarta")
+	c := cron.New(cron.WithLocation(locWIB))
+	
+	// Cek hari libur jam 08:31 setiap hari
+	c.AddFunc("31 8 * * *", helpers.CheckAutoHoliday)
+
+	// Cek auto absen keluar jam 17:01 setiap hari
+	c.AddFunc("1 17 * * *", helpers.AutoCheckout)
+
+	c.Start()
 
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
