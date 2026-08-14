@@ -47,6 +47,16 @@ func GeneratePaymentPDF(c *gin.Context) {
 		return
 	}
 
+	invoiceNum := payment.InvoiceNumber
+	if invoiceNum == "" {
+		invoiceNum = fmt.Sprintf("INV-%04d", payment.ID)
+	}
+
+	customerName := "Customer"
+	if payment.Customer != nil && payment.Customer.Name != "" {
+		customerName = payment.Customer.Name
+	}
+
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
@@ -54,7 +64,7 @@ func GeneratePaymentPDF(c *gin.Context) {
 
 	pdf.Ln(12)
 	pdf.SetFont("Arial", "", 12)
-	pdf.Cell(40, 10, fmt.Sprintf("ID Pembayaran: %d", payment.ID))
+	pdf.Cell(40, 10, fmt.Sprintf("ID Pembayaran: %s", invoiceNum))
 	pdf.Ln(8)
 	pdf.Cell(40, 10, fmt.Sprintf("Tanggal: %s", payment.CreatedAt.Format("02 Jan 2006 15:04")))
 	
@@ -88,8 +98,10 @@ func GeneratePaymentPDF(c *gin.Context) {
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, fmt.Sprintf("Total Bayar: Rp %.0f", payment.TotalAmount))
 
+	filename := fmt.Sprintf("%s - %s.pdf", customerName, invoiceNum)
+
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%d.pdf", payment.ID))
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	
 	err := pdf.Output(c.Writer)
 	if err != nil {

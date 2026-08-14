@@ -4,6 +4,9 @@ import (
 	"backend-wifi/config"
 	"backend-wifi/models"
 	"backend-wifi/utils"
+	"crypto/rand"
+	"fmt"
+	"math/big"
 	"net/http"
 )
 
@@ -25,6 +28,11 @@ func CreatePayment(customerID, WifiPackageID uint) (*models.Payment, *utils.AppE
 	ppn := totalAmount * 0.11
 	packagePrice := totalAmount - ppn
 
+	// Generate unique random invoice number INV-XXXX-XXXX
+	n1, _ := rand.Int(rand.Reader, big.NewInt(10000))
+	n2, _ := rand.Int(rand.Reader, big.NewInt(10000))
+	invoiceNumber := fmt.Sprintf("INV-%04d-%04d", n1.Int64(), n2.Int64())
+
 	payment := models.Payment{
 		CustomerID:    customerID,
 		WifiPackageID: WifiPackageID,
@@ -32,6 +40,7 @@ func CreatePayment(customerID, WifiPackageID uint) (*models.Payment, *utils.AppE
 		PPN:           ppn,
 		TotalAmount:   totalAmount,
 		Status:        "paid",
+		InvoiceNumber: invoiceNumber,
 	}
 
 	if err := config.DB.Create(&payment).Error; err != nil {
