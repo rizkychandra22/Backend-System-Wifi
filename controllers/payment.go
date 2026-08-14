@@ -97,3 +97,45 @@ func GeneratePaymentPDF(c *gin.Context) {
 		return
 	}
 }
+
+func GetAllPayments(c *gin.Context) {
+	payments, appErr := services.GetAllPayments()
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": payments})
+}
+
+func UpdatePayment(c *gin.Context) {
+	var input struct {
+		CustomerID    uint `json:"customer_id" binding:"required"`
+		WifiPackageID uint `json:"wifi_package_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	paymentID := c.Param("id")
+	payment, appErr := services.UpdatePayment(paymentID, input.CustomerID, input.WifiPackageID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Payment updated successfully", "data": payment})
+}
+
+func DeletePayment(c *gin.Context) {
+	paymentID := c.Param("id")
+	appErr := services.DeletePayment(paymentID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Payment deleted successfully"})
+}

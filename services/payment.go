@@ -56,3 +56,60 @@ func GetPaymentByID(id string) (*models.Payment, *utils.AppError) {
 	}
 	return &payment, nil
 }
+
+func GetAllPayments() ([]models.Payment, *utils.AppError) {
+	var payments []models.Payment
+	if err := config.DB.Preload("Customer").Preload("WifiPackage").Order("created_at desc").Find(&payments).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve all payments")
+	}
+	return payments, nil
+}
+
+func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, *utils.AppError) {
+	var payment models.Payment
+	if err := config.DB.First(&payment, id).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Payment not found")
+	}
+
+	var customer models.User
+	if err := config.DB.First(&customer, customerID).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Customer not found")
+	}
+	if customer.Role != models.RoleCustomer {
+		return nil, utils.NewAppError(http.StatusBadRequest, "User is not a customer")
+	}
+
+	var ws models.WifiPackage
+	if err := config.DB.First(&ws, wifiPackageID).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Wifi service not found")
+	}
+
+	totalAmount := ws.Price
+	ppn := totalAmount * 0.11
+	packagePrice := totalAmount - ppn
+
+	payment.CustomerID = customerID
+	payment.WifiPackageID = wifiPackageID
+	payment.PackagePrice = packagePrice
+	payment.PPN = ppn
+	payment.TotalAmount = totalAmount
+
+	if err := config.DB.Save(&payment).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to update payment")
+	}
+
+	return &payment, nil
+}
+
+func DeletePayment(id string) *utils.AppError {
+	var payment models.Payment
+	if err := config.DB.First(&payment, id).Error; err != nil {
+		return utils.NewAppError(http.StatusNotFound, "Payment not found")
+	}
+
+	if err := config.DB.Delete(&payment).Error; err != nil {
+		return utils.NewAppError(http.StatusInternalServerError, "Failed to delete payment")
+	}
+
+	return nil
+}
