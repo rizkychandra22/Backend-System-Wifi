@@ -16,6 +16,7 @@ type Payment struct {
 	PPN           float64        `json:"ppn" gorm:"not null"`
 	TotalAmount   float64        `json:"total_amount" gorm:"not null"`
 	Status        string         `json:"status" gorm:"default:'paid'"`
+	InvoiceNumber string         `json:"invoice_number"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
