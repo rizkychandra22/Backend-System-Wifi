@@ -45,6 +45,18 @@ func GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
+// Get admin contact
+func GetAdminContact(c *gin.Context) {
+	admin, appErr := services.GetAdminContact()
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	// Hanya return nama dan phone number untuk privasi
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"name": admin.Name, "phone": admin.Phone}})
+}
+
 // Get user by ID
 func GetUserByID(c *gin.Context) {
 	user, appErr := services.GetUserByID(c.Param("id"))
