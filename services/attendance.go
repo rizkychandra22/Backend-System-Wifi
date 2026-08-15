@@ -89,7 +89,7 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 		Grade:      grade,
 		ClockInLat: &lat,
 		ClockInLng: &lng,
-		Status:     models.StatusHadir,
+		Status:     models.StatusProses,
 	}
 
 	if err := config.DB.Create(&attendance).Error; err != nil {
@@ -104,7 +104,7 @@ func ClockOut(userID float64, lat, lng float64) (*models.Attendance, *utils.AppE
 	dateStr := now.Format("2006-01-02")
 
 	var attendance models.Attendance
-	if err := config.DB.Where("user_id = ? AND date = ?", userID, dateStr).First(&attendance).Error; err != nil {
+	if err := config.DB.Where("user_id = ? AND date = ? AND status = ?", userID, dateStr, models.StatusProses).First(&attendance).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Anda belum melakukan absen masuk hari ini")
 	}
 
@@ -134,7 +134,7 @@ func ClockOut(userID float64, lat, lng float64) (*models.Attendance, *utils.AppE
 	attendance.ClockOut = &now
 	attendance.ClockOutLat = &lat
 	attendance.ClockOutLng = &lng
-	attendance.Status = models.StatusSelesai
+	attendance.Status = models.StatusHadir
 
 	if err := config.DB.Save(&attendance).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mencatat absen keluar")
@@ -148,23 +148,48 @@ func RequestIzin(userID float64, notes string) (*models.Attendance, *utils.AppEr
 	dateStr := now.Format("2006-01-02")
 
 	var existing models.Attendance
-	if err := config.DB.Where("user_id = ? AND date = ?", userID, dateStr).First(&existing).Error; err == nil {
-		return nil, utils.NewAppError(http.StatusConflict, "Anda sudah memiliki catatan absen hari ini")
-	}
+	err := config.DB.Where("user_id = ? AND date = ?", userID, dateStr).First(&existing).Error
 
 	uid := uint(userID)
-	attendance := models.Attendance{
-		UserID: &uid,
-		Date:   dateStr,
-		Status: models.StatusIzin,
-		Notes:  &notes,
-	}
 
-	if err := config.DB.Create(&attendance).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengajukan izin")
-	}
+	if err == nil {
+		// Mid-day izin (Sudah absen masuk)
+		if existing.Status != models.StatusProses {
+			return nil, utils.NewAppError(http.StatusConflict, "Status absen tidak valid untuk mengajukan izin (sudah selesai atau libur)")
+		}
+		
+		existing.Status = models.StatusIzin
+		existing.ClockOut = &now
+		if existing.Notes == nil || *existing.Notes == "" {
+			existing.Notes = &notes
+		} else {
+			updatedNotes := *existing.Notes + " | Izin: " + notes
+			existing.Notes = &updatedNotes
+		}
 
-	return &attendance, nil
+		if err := config.DB.Save(&existing).Error; err != nil {
+			return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengupdate status menjadi izin")
+		}
+		return &existing, nil
+	} else {
+		// Izin sebelum absen masuk (Harus sebelum 08:30)
+		time830 := time.Date(now.Year(), now.Month(), now.Day(), 8, 30, 0, 0, locWIB)
+		if now.After(time830) {
+			return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu pengajuan izin full-day (08:30) telah lewat. Jika sudah masuk, pastikan absen masuk terlebih dahulu.")
+		}
+
+		attendance := models.Attendance{
+			UserID: &uid,
+			Date:   dateStr,
+			Status: models.StatusIzin,
+			Notes:  &notes,
+		}
+
+		if err := config.DB.Create(&attendance).Error; err != nil {
+			return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengajukan izin")
+		}
+		return &attendance, nil
+	}
 }
 
 func GetTodayAttendance(userID float64) (*models.Attendance, *utils.AppError) {
