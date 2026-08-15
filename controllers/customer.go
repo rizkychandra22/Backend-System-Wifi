@@ -3,6 +3,7 @@ package controllers
 import (
 	"backend-wifi/models"
 	"backend-wifi/services"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +37,7 @@ func CreateCustomer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Customer created successfully", "data": customer})
+	c.JSON(http.StatusCreated, gin.H{"message": "Pelanggan berhasil dibuat", "data": customer})
 }
 
 func GetCustomers(c *gin.Context) {
@@ -57,4 +58,33 @@ func GetCustomers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": customers})
+}
+
+func GetCustomerSubscription(c *gin.Context) {
+	customerID := c.Param("id")
+
+	userRoleClaim, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userRole := userRoleClaim.(string)
+
+	if userRole == string(models.RoleCustomer) {
+		userIDClaim, _ := c.Get("userID")
+		userID := uint(userIDClaim.(float64))
+
+		if fmt.Sprintf("%d", userID) != customerID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You can only view your own subscription"})
+			return
+		}
+	}
+
+	subscription, appErr := services.GetCustomerSubscription(customerID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": subscription})
 }

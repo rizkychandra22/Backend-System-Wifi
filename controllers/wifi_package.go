@@ -24,7 +24,7 @@ func CreateWifiPackage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Wifi service created", "data": ws})
+	c.JSON(http.StatusCreated, gin.H{"message": "Layanan WiFi berhasil dibuat", "data": ws})
 }
 
 func GetWifiPackages(c *gin.Context) {
@@ -54,7 +54,7 @@ func UpdateWifiPackage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Wifi service updated", "data": ws})
+	c.JSON(http.StatusOK, gin.H{"message": "Layanan WiFi berhasil diperbarui", "data": ws})
 }
 
 func DeleteWifiPackage(c *gin.Context) {
@@ -64,5 +64,5 @@ func DeleteWifiPackage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Wifi service deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Layanan WiFi berhasil dihapus"})
 }

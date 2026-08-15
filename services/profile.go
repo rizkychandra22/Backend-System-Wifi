@@ -12,7 +12,7 @@ import (
 func UpdateProfile(userID float64, name, phone, address *string) (*models.User, *utils.AppError) {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "User not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	if name != nil {
@@ -26,7 +26,7 @@ func UpdateProfile(userID float64, name, phone, address *string) (*models.User, 
 	}
 
 	if err := config.DB.Save(&user).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to update profile")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui profil")
 	}
 
 	return &user, nil
@@ -35,7 +35,7 @@ func UpdateProfile(userID float64, name, phone, address *string) (*models.User, 
 func UpdatePassword(userID float64, oldPassword, newPassword string) *utils.AppError {
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		return utils.NewAppError(http.StatusNotFound, "User not found")
+		return utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	if user.Role != "admin" {
