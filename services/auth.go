@@ -64,6 +64,7 @@ func Login(phone string, password *string, clientIP string) (map[string]interfac
 	// Generate JWT Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":    user.ID,
+		"name":  user.Name,
 		"role":  user.Role,
 		"phone": user.Phone,
 		"exp":   time.Now().Add(time.Hour * 72).Unix(), // 3 days expiration
@@ -71,12 +72,12 @@ func Login(phone string, password *string, clientIP string) (map[string]interfac
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "JWT_SECRET not configured")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "JWT_SECRET belum dikonfigurasi")
 	}
 
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to generate token")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal membuat token")
 	}
 
 	return map[string]interface{}{

@@ -28,6 +28,9 @@ func main() {
 	// Seed Initial Data
 	seeder.SeedAdminUser(db)
 
+	// Backfill Data Consistency
+	helpers.BackfillRegisteredBy()
+
 	r := gin.Default()
 
 	// Enable CORS untuk semua origin dan izinkan header Authorization

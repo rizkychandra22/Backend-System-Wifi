@@ -9,8 +9,8 @@ import (
 type AttendanceStatus string
 
 const (
+	StatusProses  AttendanceStatus = "Proses"
 	StatusHadir   AttendanceStatus = "Hadir"
-	StatusSelesai AttendanceStatus = "Selesai"
 	StatusLibur   AttendanceStatus = "Libur"
 	StatusIzin    AttendanceStatus = "Izin"
 )

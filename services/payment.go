@@ -13,15 +13,15 @@ import (
 func CreatePayment(customerID, WifiPackageID uint) (*models.Payment, *utils.AppError) {
 	var customer models.User
 	if err := config.DB.First(&customer, customerID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Customer not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pelanggan tidak ditemukan")
 	}
 	if customer.Role != models.RoleCustomer {
-		return nil, utils.NewAppError(http.StatusBadRequest, "User is not a customer")
+		return nil, utils.NewAppError(http.StatusBadRequest, "Pengguna bukan pelanggan")
 	}
 
 	var ws models.WifiPackage
 	if err := config.DB.First(&ws, WifiPackageID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Wifi service not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Layanan WiFi tidak ditemukan")
 	}
 
 	totalAmount := ws.Price
@@ -44,7 +44,7 @@ func CreatePayment(customerID, WifiPackageID uint) (*models.Payment, *utils.AppE
 	}
 
 	if err := config.DB.Create(&payment).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to create payment")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mencatat pembayaran")
 	}
 
 	return &payment, nil
@@ -53,7 +53,7 @@ func CreatePayment(customerID, WifiPackageID uint) (*models.Payment, *utils.AppE
 func GetCustomerPayments(customerID string) ([]models.Payment, *utils.AppError) {
 	var payments []models.Payment
 	if err := config.DB.Preload("WifiPackage").Where("customer_id = ?", customerID).Order("created_at desc").Find(&payments).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve payments")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data pembayaran")
 	}
 	return payments, nil
 }
@@ -61,7 +61,7 @@ func GetCustomerPayments(customerID string) ([]models.Payment, *utils.AppError) 
 func GetPaymentByID(id string) (*models.Payment, *utils.AppError) {
 	var payment models.Payment
 	if err := config.DB.Preload("Customer").Preload("WifiPackage").First(&payment, id).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Payment not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pembayaran tidak ditemukan")
 	}
 	return &payment, nil
 }
@@ -69,7 +69,7 @@ func GetPaymentByID(id string) (*models.Payment, *utils.AppError) {
 func GetAllPayments() ([]models.Payment, *utils.AppError) {
 	var payments []models.Payment
 	if err := config.DB.Preload("Customer").Preload("WifiPackage").Order("created_at desc").Find(&payments).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve all payments")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil seluruh data pembayaran")
 	}
 	return payments, nil
 }
@@ -77,20 +77,20 @@ func GetAllPayments() ([]models.Payment, *utils.AppError) {
 func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, *utils.AppError) {
 	var payment models.Payment
 	if err := config.DB.First(&payment, id).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Payment not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pembayaran tidak ditemukan")
 	}
 
 	var customer models.User
 	if err := config.DB.First(&customer, customerID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Customer not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pelanggan tidak ditemukan")
 	}
 	if customer.Role != models.RoleCustomer {
-		return nil, utils.NewAppError(http.StatusBadRequest, "User is not a customer")
+		return nil, utils.NewAppError(http.StatusBadRequest, "Pengguna bukan pelanggan")
 	}
 
 	var ws models.WifiPackage
 	if err := config.DB.First(&ws, wifiPackageID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Wifi service not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Layanan WiFi tidak ditemukan")
 	}
 
 	totalAmount := ws.Price
@@ -104,7 +104,7 @@ func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, 
 	payment.TotalAmount = totalAmount
 
 	if err := config.DB.Save(&payment).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to update payment")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui pembayaran")
 	}
 
 	return &payment, nil
@@ -113,11 +113,11 @@ func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, 
 func DeletePayment(id string) *utils.AppError {
 	var payment models.Payment
 	if err := config.DB.First(&payment, id).Error; err != nil {
-		return utils.NewAppError(http.StatusNotFound, "Payment not found")
+		return utils.NewAppError(http.StatusNotFound, "Pembayaran tidak ditemukan")
 	}
 
 	if err := config.DB.Delete(&payment).Error; err != nil {
-		return utils.NewAppError(http.StatusInternalServerError, "Failed to delete payment")
+		return utils.NewAppError(http.StatusInternalServerError, "Gagal menghapus pembayaran")
 	}
 
 	return nil
