@@ -9,11 +9,15 @@ import (
 func SetupWifiPackageRoutes(r *gin.Engine) {
 	wsRoutes := r.Group("/api/admin/wifi-packages")
 	wsRoutes.Use(middlewares.RequireAuth)
-	wsRoutes.Use(middlewares.RequireRole("admin"))
 	{
-		wsRoutes.POST("", controllers.CreateWifiPackage)
 		wsRoutes.GET("", controllers.GetWifiPackages)
-		wsRoutes.PUT("/:id", controllers.UpdateWifiPackage)
-		wsRoutes.DELETE("/:id", controllers.DeleteWifiPackage)
+
+		adminRoutes := wsRoutes.Group("")
+		adminRoutes.Use(middlewares.RequireRole("admin"))
+		{
+			adminRoutes.POST("", controllers.CreateWifiPackage)
+			adminRoutes.PUT("/:id", controllers.UpdateWifiPackage)
+			adminRoutes.DELETE("/:id", controllers.DeleteWifiPackage)
+		}
 	}
 }
