@@ -18,6 +18,7 @@ func SetupAuthRoutes(r *gin.Engine) {
 		{
 			protectedAuth.PUT("/profile", controllers.UpdateProfile)
 			protectedAuth.PUT("/profile/password", controllers.UpdatePassword)
+			protectedAuth.GET("/admin-contact", controllers.GetAdminContact)
 		}
 	}
 }

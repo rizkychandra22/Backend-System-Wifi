@@ -31,6 +31,14 @@ func GetUsers() ([]models.User, *utils.AppError) {
 	return users, nil
 }
 
+func GetAdminContact() (*models.User, *utils.AppError) {
+	var admin models.User
+	if err := config.DB.Where("role = ?", models.RoleAdmin).First(&admin).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Admin tidak ditemukan")
+	}
+	return &admin, nil
+}
+
 func GetUserByID(id string) (*models.User, *utils.AppError) {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
