@@ -47,6 +47,16 @@ func GeneratePaymentPDF(c *gin.Context) {
 		return
 	}
 
+	invoiceNum := payment.InvoiceNumber
+	if invoiceNum == "" {
+		invoiceNum = fmt.Sprintf("INV-%04d", payment.ID)
+	}
+
+	customerName := "Customer"
+	if payment.Customer != nil && payment.Customer.Name != "" {
+		customerName = payment.Customer.Name
+	}
+
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
@@ -54,7 +64,7 @@ func GeneratePaymentPDF(c *gin.Context) {
 
 	pdf.Ln(12)
 	pdf.SetFont("Arial", "", 12)
-	pdf.Cell(40, 10, fmt.Sprintf("ID Pembayaran: %d", payment.ID))
+	pdf.Cell(40, 10, fmt.Sprintf("ID Pembayaran: %s", invoiceNum))
 	pdf.Ln(8)
 	pdf.Cell(40, 10, fmt.Sprintf("Tanggal: %s", payment.CreatedAt.Format("02 Jan 2006 15:04")))
 	
@@ -88,12 +98,56 @@ func GeneratePaymentPDF(c *gin.Context) {
 	pdf.SetFont("Arial", "B", 12)
 	pdf.Cell(40, 10, fmt.Sprintf("Total Bayar: Rp %.0f", payment.TotalAmount))
 
+	filename := fmt.Sprintf("%s - %s.pdf", customerName, invoiceNum)
+
 	c.Header("Content-Type", "application/pdf")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=invoice-%d.pdf", payment.ID))
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	
 	err := pdf.Output(c.Writer)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF"})
 		return
 	}
+}
+
+func GetAllPayments(c *gin.Context) {
+	payments, appErr := services.GetAllPayments()
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": payments})
+}
+
+func UpdatePayment(c *gin.Context) {
+	var input struct {
+		CustomerID    uint `json:"customer_id" binding:"required"`
+		WifiPackageID uint `json:"wifi_package_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	paymentID := c.Param("id")
+	payment, appErr := services.UpdatePayment(paymentID, input.CustomerID, input.WifiPackageID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Payment updated successfully", "data": payment})
+}
+
+func DeletePayment(c *gin.Context) {
+	paymentID := c.Param("id")
+	appErr := services.DeletePayment(paymentID)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Payment deleted successfully"})
 }
