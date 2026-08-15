@@ -24,10 +24,9 @@ func ConnectDatabase() *gorm.DB {
 	dbname   := os.Getenv("DB_DATABASE")
 	port     := os.Getenv("DB_PORT")
 	sslmode  := os.Getenv("DB_SSLMODE")
-	poolmode := os.Getenv("DB_POOL_MODE")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s poolmode=%s",
-		host, user, password, dbname, port, sslmode, poolmode)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		host, user, password, dbname, port, sslmode)
 
 	database, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
