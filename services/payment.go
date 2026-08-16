@@ -53,7 +53,7 @@ func CreatePayment(customerID, WifiPackageID, createdByID uint) (*models.Payment
 
 func GetCustomerPayments(customerID string) ([]models.Payment, *utils.AppError) {
 	var payments []models.Payment
-	if err := config.DB.Preload("WifiPackage").Preload("CreatedBy").Where("customer_id = ?", customerID).Order("created_at desc").Find(&payments).Error; err != nil {
+	if err := config.DB.Preload("Customer").Preload("WifiPackage").Preload("CreatedBy").Where("customer_id = ?", customerID).Order("created_at desc").Find(&payments).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data pembayaran")
 	}
 	return payments, nil
