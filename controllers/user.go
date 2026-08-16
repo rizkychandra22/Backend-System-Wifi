@@ -31,7 +31,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "data": user})
+	c.JSON(http.StatusCreated, gin.H{"message": "Pengguna berhasil dibuat", "data": user})
 }
 
 // Get all users
@@ -43,6 +43,18 @@ func GetUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+// Get admin contact
+func GetAdminContact(c *gin.Context) {
+	admin, appErr := services.GetAdminContact()
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	// Hanya return nama dan phone number untuk privasi
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"name": admin.Name, "phone": admin.Phone}})
 }
 
 // Get user by ID
@@ -76,7 +88,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "data": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Pengguna berhasil diperbarui", "data": user})
 }
 
 // Delete User
@@ -87,7 +99,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Pengguna berhasil dihapus"})
 }
 
 // Reset User IP (Admin only) - Digunakan jika device pengguna hilang/rusak
@@ -98,5 +110,5 @@ func ResetUserIP(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User IP reset successfully. User can now login from a new device."})
+	c.JSON(http.StatusOK, gin.H{"message": "IP Pengguna berhasil di-reset. Pengguna sekarang dapat login dari perangkat baru."})
 }

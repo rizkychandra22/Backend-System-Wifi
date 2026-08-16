@@ -14,9 +14,9 @@ func AutoCheckout() {
 	autoCheckoutTime := time.Date(now.Year(), now.Month(), now.Day(), 17, 0, 0, 0, locWIB)
 	
 	config.DB.Model(&models.Attendance{}).
-		Where("date = ? AND status = ?", dateStr, models.StatusHadir).
+		Where("date = ? AND status = ?", dateStr, models.StatusProses).
 		Updates(map[string]interface{}{
-			"status":    models.StatusSelesai,
+			"status":    models.StatusHadir,
 			"clock_out": autoCheckoutTime,
 		})
 	log.Println("Proses auto absen keluar pada jam 17:00 selesai")

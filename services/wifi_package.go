@@ -10,7 +10,7 @@ import (
 func CreateWifiPackage(name string, price float64) (*models.WifiPackage, *utils.AppError) {
 	ws := models.WifiPackage{Name: name, Price: price}
 	if err := config.DB.Create(&ws).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to create wifi service")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal membuat layanan WiFi")
 	}
 	return &ws, nil
 }
@@ -18,7 +18,7 @@ func CreateWifiPackage(name string, price float64) (*models.WifiPackage, *utils.
 func GetWifiPackages() ([]models.WifiPackage, *utils.AppError) {
 	var ws []models.WifiPackage
 	if err := config.DB.Find(&ws).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve wifi services")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data layanan WiFi")
 	}
 	return ws, nil
 }
@@ -26,7 +26,7 @@ func GetWifiPackages() ([]models.WifiPackage, *utils.AppError) {
 func UpdateWifiPackage(id string, name *string, price *float64) (*models.WifiPackage, *utils.AppError) {
 	var ws models.WifiPackage
 	if err := config.DB.First(&ws, id).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Wifi service not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Layanan WiFi tidak ditemukan")
 	}
 
 	if name != nil {
@@ -36,7 +36,7 @@ func UpdateWifiPackage(id string, name *string, price *float64) (*models.WifiPac
 		ws.Price = *price
 	}
 	if err := config.DB.Save(&ws).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to update wifi service")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui layanan WiFi")
 	}
 	return &ws, nil
 }
@@ -44,10 +44,10 @@ func UpdateWifiPackage(id string, name *string, price *float64) (*models.WifiPac
 func DeleteWifiPackage(id string) *utils.AppError {
 	var ws models.WifiPackage
 	if err := config.DB.First(&ws, id).Error; err != nil {
-		return utils.NewAppError(http.StatusNotFound, "Wifi service not found")
+		return utils.NewAppError(http.StatusNotFound, "Layanan WiFi tidak ditemukan")
 	}
 	if err := config.DB.Delete(&ws).Error; err != nil {
-		return utils.NewAppError(http.StatusInternalServerError, "Failed to delete wifi service")
+		return utils.NewAppError(http.StatusInternalServerError, "Gagal menghapus layanan WiFi")
 	}
 	return nil
 }

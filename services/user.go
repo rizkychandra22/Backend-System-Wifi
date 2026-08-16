@@ -17,7 +17,7 @@ func CreateUser(name, phone string, role models.Role, address *string, registere
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to create user")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal membuat pengguna")
 	}
 
 	return &user, nil
@@ -26,15 +26,23 @@ func CreateUser(name, phone string, role models.Role, address *string, registere
 func GetUsers() ([]models.User, *utils.AppError) {
 	var users []models.User
 	if err := config.DB.Preload("RegisteredBy").Find(&users).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to retrieve users")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data pengguna")
 	}
 	return users, nil
+}
+
+func GetAdminContact() (*models.User, *utils.AppError) {
+	var admin models.User
+	if err := config.DB.Where("role = ?", models.RoleAdmin).First(&admin).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Admin tidak ditemukan")
+	}
+	return &admin, nil
 }
 
 func GetUserByID(id string) (*models.User, *utils.AppError) {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "User not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 	return &user, nil
 }
@@ -42,7 +50,7 @@ func GetUserByID(id string) (*models.User, *utils.AppError) {
 func UpdateUser(id string, name, phone *string, role *models.Role, address *string) (*models.User, *utils.AppError) {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "User not found")
+		return nil, utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	if name != nil {
@@ -58,7 +66,7 @@ func UpdateUser(id string, name, phone *string, role *models.Role, address *stri
 		user.Address = address
 	}
 	if err := config.DB.Save(&user).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusInternalServerError, "Failed to update user")
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui pengguna")
 	}
 
 	return &user, nil
@@ -67,11 +75,11 @@ func UpdateUser(id string, name, phone *string, role *models.Role, address *stri
 func DeleteUser(id string) *utils.AppError {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
-		return utils.NewAppError(http.StatusNotFound, "User not found")
+		return utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	if err := config.DB.Delete(&user).Error; err != nil {
-		return utils.NewAppError(http.StatusInternalServerError, "Failed to delete user")
+		return utils.NewAppError(http.StatusInternalServerError, "Gagal menghapus pengguna")
 	}
 
 	return nil
@@ -80,12 +88,12 @@ func DeleteUser(id string) *utils.AppError {
 func ResetUserIP(id string) *utils.AppError {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
-		return utils.NewAppError(http.StatusNotFound, "User not found")
+		return utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	user.IPAddress = nil
 	if err := config.DB.Save(&user).Error; err != nil {
-		return utils.NewAppError(http.StatusInternalServerError, "Failed to reset user IP")
+		return utils.NewAppError(http.StatusInternalServerError, "Gagal me-reset IP pengguna")
 	}
 
 	return nil
