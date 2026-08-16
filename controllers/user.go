@@ -23,7 +23,14 @@ func CreateUser(c *gin.Context) {
 	}
 
 	userIDClaim, _ := c.Get("userID")
-	userID         := uint(userIDClaim.(float64))
+	userID := uint(userIDClaim.(float64))
+
+	userRoleClaim, _ := c.Get("userRole")
+	userRole := userRoleClaim.(string)
+
+	if userRole == string(models.RoleEmployee) {
+		input.Role = models.RoleCustomer // Employee hanya bisa membuat customer
+	}
 
 	user, appErr := services.CreateUser(input.Name, input.Phone, input.Role, input.Address, &userID)
 	if appErr != nil {
@@ -36,7 +43,17 @@ func CreateUser(c *gin.Context) {
 
 // Get all users
 func GetUsers(c *gin.Context) {
-	users, appErr := services.GetUsers()
+	userRoleClaim, _ := c.Get("userRole")
+	userRole := userRoleClaim.(string)
+
+	var employeeID *uint
+	if userRole == string(models.RoleEmployee) {
+		userIDClaim, _ := c.Get("userID")
+		id := uint(userIDClaim.(float64))
+		employeeID = &id
+	}
+
+	users, appErr := services.GetUsers(employeeID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -82,7 +99,21 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, appErr := services.UpdateUser(c.Param("id"), input.Name, input.Phone, input.Role, input.Address)
+	userRoleClaim, _ := c.Get("userRole")
+	userRole := userRoleClaim.(string)
+
+	var employeeID *uint
+	if userRole == string(models.RoleEmployee) {
+		userIDClaim, _ := c.Get("userID")
+		id := uint(userIDClaim.(float64))
+		employeeID = &id
+
+		// Karyawan tidak bisa mengubah role
+		custRole := models.RoleCustomer
+		input.Role = &custRole
+	}
+
+	user, appErr := services.UpdateUser(c.Param("id"), input.Name, input.Phone, input.Role, input.Address, employeeID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
