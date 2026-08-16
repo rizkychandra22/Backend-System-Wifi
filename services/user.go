@@ -23,9 +23,15 @@ func CreateUser(name, phone string, role models.Role, address *string, registere
 	return &user, nil
 }
 
-func GetUsers() ([]models.User, *utils.AppError) {
+func GetUsers(employeeID *uint) ([]models.User, *utils.AppError) {
 	var users []models.User
-	if err := config.DB.Preload("RegisteredBy").Find(&users).Error; err != nil {
+	query := config.DB.Preload("RegisteredBy")
+
+	if employeeID != nil {
+		query = query.Where("role = ? AND registered_by_id = ?", models.RoleCustomer, *employeeID)
+	}
+
+	if err := query.Find(&users).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data pengguna")
 	}
 	return users, nil
@@ -47,10 +53,16 @@ func GetUserByID(id string) (*models.User, *utils.AppError) {
 	return &user, nil
 }
 
-func UpdateUser(id string, name, phone *string, role *models.Role, address *string) (*models.User, *utils.AppError) {
+func UpdateUser(id string, name, phone *string, role *models.Role, address *string, employeeID *uint) (*models.User, *utils.AppError) {
 	var user models.User
 	if err := config.DB.First(&user, id).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
+	}
+
+	if employeeID != nil {
+		if user.RegisteredByID == nil || *user.RegisteredByID != *employeeID {
+			return nil, utils.NewAppError(http.StatusForbidden, "Anda tidak memiliki akses untuk mengubah pelanggan ini")
+		}
 	}
 
 	if name != nil {

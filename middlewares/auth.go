@@ -58,7 +58,7 @@ func RequireAuth(c *gin.Context) {
 }
 
 // RequireRole middleware ensures the user has a specific role (must be called after RequireAuth)
-func RequireRole(requiredRole string) gin.HandlerFunc {
+func RequireRole(requiredRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userRole, exists := c.Get("userRole")
 		if !exists {
@@ -67,7 +67,15 @@ func RequireRole(requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		if userRole.(string) != requiredRole {
+		hasRole := false
+		for _, role := range requiredRoles {
+			if userRole.(string) == role {
+				hasRole = true
+				break
+			}
+		}
+
+		if !hasRole {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to access this resource"})
 			c.Abort()
 			return

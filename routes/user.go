@@ -7,16 +7,14 @@ import (
 )
 
 func SetupUserRoutes(r *gin.Engine) {
-	// Group di /api/admin dengan perlindungan JWT dan Role Admin
-	adminRoutes := r.Group("/api/admin")
-	adminRoutes.Use(middlewares.RequireAuth)
-	adminRoutes.Use(middlewares.RequireRole("admin"))
+	userRoutes := r.Group("/api/users")
+	userRoutes.Use(middlewares.RequireAuth)
 	{
-		adminRoutes.POST("/users", controllers.CreateUser)
-		adminRoutes.GET("/users", controllers.GetUsers)
-		adminRoutes.GET("/users/:id", controllers.GetUserByID)
-		adminRoutes.PUT("/users/:id", controllers.UpdateUser)
-		adminRoutes.DELETE("/users/:id", controllers.DeleteUser)
-		adminRoutes.PUT("/users/:id/reset-ip", controllers.ResetUserIP)
+		userRoutes.POST("", middlewares.RequireRole("admin", "employee"), controllers.CreateUser)
+		userRoutes.GET("", middlewares.RequireRole("admin", "employee"), controllers.GetUsers)
+		userRoutes.GET("/:id", middlewares.RequireRole("admin", "employee"), controllers.GetUserByID)
+		userRoutes.PUT("/:id", middlewares.RequireRole("admin", "employee"), controllers.UpdateUser)
+		userRoutes.DELETE("/:id", middlewares.RequireRole("admin"), controllers.DeleteUser)
+		userRoutes.PUT("/:id/reset-ip", middlewares.RequireRole("admin"), controllers.ResetUserIP)
 	}
 }
