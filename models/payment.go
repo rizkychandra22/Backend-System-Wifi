@@ -17,6 +17,8 @@ type Payment struct {
 	TotalAmount   float64        `json:"total_amount" gorm:"not null"`
 	Status        string         `json:"status" gorm:"default:'paid'"`
 	InvoiceNumber string         `json:"invoice_number"`
+	CreatedByID   *uint          `json:"created_by_id"`
+	CreatedBy     *User          `json:"created_by" gorm:"foreignKey:CreatedByID"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`

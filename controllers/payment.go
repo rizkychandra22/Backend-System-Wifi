@@ -21,7 +21,10 @@ func CreatePayment(c *gin.Context) {
 		return
 	}
 
-	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiPackageID)
+	userIDClaim, _ := c.Get("userID")
+	userID := uint(userIDClaim.(float64))
+
+	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiPackageID, userID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
