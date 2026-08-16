@@ -20,7 +20,7 @@ func main() {
 	db := config.ConnectDatabase()
 
 	// Auto Migrate Schema
-	if err := db.AutoMigrate(&models.User{}, &models.IPLockout{}, &models.Attendance{}, &models.WifiPackage{}, &models.Payment{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.DeviceLockout{}, &models.Attendance{}, &models.WifiPackage{}, &models.Payment{}); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 	log.Println("Migrasi database berhasil")

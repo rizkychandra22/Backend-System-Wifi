@@ -12,7 +12,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Login(phone string, password *string, clientIP string) (map[string]interface{}, *utils.AppError) {
+func Login(phone string, password *string, deviceID string) (map[string]interface{}, *utils.AppError) {
+
+	// Cek apakah device_id sedang di-lockout
+	var lockout models.DeviceLockout
+	if err := config.DB.Where("device_id = ?", deviceID).First(&lockout).Error; err == nil {
+		if lockout.LockedUntil.After(time.Now()) {
+			return nil, utils.NewAppError(http.StatusForbidden, "Akses login dari perangkat Anda diblokir selama 24 jam.")
+		}
+	}
 
 	var user models.User
 	if err := config.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
@@ -20,9 +28,27 @@ func Login(phone string, password *string, clientIP string) (map[string]interfac
 	}
 
 	if user.Role == "admin" {
-		// Cek status terkunci
+		// Cek status terkunci akun admin
 		if user.LockedUntil != nil && user.LockedUntil.After(time.Now()) {
 			return nil, utils.NewAppError(http.StatusForbidden, "Akun terkunci karena terlalu banyak percobaan salah. Coba lagi dalam 30 menit.")
+		}
+
+		// Cek apakah deviceID ini pernah dipakai login oleh non-admin
+		var nonAdminCount int64
+		config.DB.Model(&models.User{}).Where("role IN ('employee', 'customer') AND device_id = ?", deviceID).Count(&nonAdminCount)
+		if nonAdminCount > 0 {
+			// Blokir device ini selama 24 jam
+			lockedUntil := time.Now().Add(24 * time.Hour)
+			if lockout.ID != 0 {
+				lockout.LockedUntil = lockedUntil
+				config.DB.Save(&lockout)
+			} else {
+				config.DB.Create(&models.DeviceLockout{
+					DeviceID:    deviceID,
+					LockedUntil: lockedUntil,
+				})
+			}
+			return nil, utils.NewAppError(http.StatusForbidden, "Perangkat ini telah diblokir selama 24 jam karena pelanggaran keamanan percobaan akses admin.")
 		}
 
 		// Cek Password kosong
@@ -50,13 +76,13 @@ func Login(phone string, password *string, clientIP string) (map[string]interfac
 		config.DB.Save(&user)
 
 	} else {
-		// Device IP Lock Logic (Admin dibebaskan dari lock device)
-		if user.IPAddress == nil || *user.IPAddress == "" {
-			// First time login, save this IP
-			user.IPAddress = &clientIP
+		// Device Lock Logic (Admin dibebaskan dari lock device)
+		if user.DeviceID == nil || *user.DeviceID == "" {
+			// First time login, save this DeviceID
+			user.DeviceID = &deviceID
 			config.DB.Save(&user)
-		} else if *user.IPAddress != clientIP {
-			// IP mismatch, block login
+		} else if *user.DeviceID != deviceID {
+			// Device mismatch, block login
 			return nil, utils.NewAppError(http.StatusForbidden, "Akun ini sudah login di device lain. Silakan hubungi Admin.")
 		}
 	}
