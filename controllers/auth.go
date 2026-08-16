@@ -12,6 +12,7 @@ func Login(c *gin.Context) {
 	var input struct {
 		Phone    string  `json:"phone" binding:"required"`
 		Password *string `json:"password"`
+		DeviceID string  `json:"device_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -19,7 +20,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	result, appErr := services.Login(input.Phone, input.Password, c.ClientIP())
+	result, appErr := services.Login(input.Phone, input.Password, input.DeviceID)
 	if appErr != nil {
 		if appErr.Data != nil {
 			// Merge data from appErr.Data (e.g., requires_password: true)

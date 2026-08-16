@@ -23,7 +23,7 @@ type User struct {
 	FailedLoginAttempts int            `gorm:"default:0" json:"-"`
 	LockedUntil         *time.Time     `json:"locked_until,omitempty"`
 	Address             *string        `gorm:"type:text" json:"address"`
-	IPAddress           *string        `gorm:"type:varchar(45)" json:"ip_address"`
+	DeviceID            *string        `gorm:"type:varchar(255)" json:"device_id"`
 	RegisteredByID      *uint          `json:"registered_by_id,omitempty"`
 	RegisteredBy        *User          `gorm:"foreignKey:RegisteredByID" json:"registered_by,omitempty"`
 	CreatedAt           time.Time      `json:"created_at"`

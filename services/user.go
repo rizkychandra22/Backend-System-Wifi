@@ -91,7 +91,7 @@ func ResetUserIP(id string) *utils.AppError {
 		return utils.NewAppError(http.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
-	user.IPAddress = nil
+	user.DeviceID = nil
 	if err := config.DB.Save(&user).Error; err != nil {
 		return utils.NewAppError(http.StatusInternalServerError, "Gagal me-reset IP pengguna")
 	}
