@@ -10,10 +10,10 @@ func SetupPaymentRoutes(r *gin.Engine) {
 	paymentRoutes := r.Group("/api/payments")
 	paymentRoutes.Use(middlewares.RequireAuth)
 	{
-		// Admin full CRUD
-		paymentRoutes.GET("/invoice", middlewares.RequireRole("admin"), controllers.GetAllPayments)
-		paymentRoutes.POST("/invoice", middlewares.RequireRole("admin"), controllers.CreatePayment)
-		paymentRoutes.PUT("/invoice/:id", middlewares.RequireRole("admin"), controllers.UpdatePayment)
+		// Admin & Employee CRUD (Delete is Admin only)
+		paymentRoutes.GET("/invoice", middlewares.RequireRole("admin", "employee"), controllers.GetAllPayments)
+		paymentRoutes.POST("/invoice", middlewares.RequireRole("admin", "employee"), controllers.CreatePayment)
+		paymentRoutes.PUT("/invoice/:id", middlewares.RequireRole("admin", "employee"), controllers.UpdatePayment)
 		paymentRoutes.DELETE("/invoice/:id", middlewares.RequireRole("admin"), controllers.DeletePayment)
 		
 		// History & PDF (Admin & Employee? Actually Customer & Admin)

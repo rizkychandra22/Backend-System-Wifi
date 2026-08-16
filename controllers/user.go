@@ -48,9 +48,11 @@ func GetUsers(c *gin.Context) {
 
 	var employeeID *uint
 	if userRole == string(models.RoleEmployee) {
-		userIDClaim, _ := c.Get("userID")
-		id := uint(userIDClaim.(float64))
-		employeeID = &id
+		if c.Query("all") != "true" {
+			userIDClaim, _ := c.Get("userID")
+			id := uint(userIDClaim.(float64))
+			employeeID = &id
+		}
 	}
 
 	users, appErr := services.GetUsers(employeeID)
