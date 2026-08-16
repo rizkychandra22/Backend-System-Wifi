@@ -15,7 +15,7 @@ func CheckAutoHoliday() {
 	config.DB.Model(&models.Attendance{}).Where("date = ? AND status != ?", dateStr, models.StatusLibur).Count(&count)
 	if count == 0 {
 		var users []models.User
-		config.DB.Where("role IN ?", []models.Role{models.RoleEmployee, models.RoleAdmin}).Find(&users)
+		config.DB.Where("role = ?", models.RoleEmployee).Find(&users)
 
 		for _, u := range users {
 			uid := u.ID

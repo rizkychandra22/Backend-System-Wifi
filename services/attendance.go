@@ -215,7 +215,9 @@ func GetAttendanceHistory(userID float64) ([]models.Attendance, *utils.AppError)
 
 func GetAllAttendance() ([]models.Attendance, *utils.AppError) {
 	var records []models.Attendance
-	if err := config.DB.Preload("User").Order("date DESC").Find(&records).Error; err != nil {
+	if err := config.DB.Joins("JOIN users ON users.id = attendances.user_id").
+		Where("users.role = ?", models.RoleEmployee).
+		Preload("User").Order("date DESC").Find(&records).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data absen")
 	}
 	return records, nil
