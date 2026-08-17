@@ -59,8 +59,10 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 	}
 
 	// Validasi Jarak (maksimal 100 meter dari kantor)
-	officeLat := -7.033562
-	officeLng := 106.949204
+	// officeLat := -7.033562
+	// officeLng := 106.949204
+	officeLat := -6.926958
+	officeLng := 106.908998
 	distance := haversineDistance(officeLat, officeLng, lat, lng)
 	if distance > 100 {
 		return nil, utils.NewAppError(http.StatusForbidden, "Anda berada di luar area kantor (jarak > 100 meter)")
