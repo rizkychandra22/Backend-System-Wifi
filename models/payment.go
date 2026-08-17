@@ -16,6 +16,7 @@ type Payment struct {
 	PPN           float64        `json:"ppn" gorm:"not null"`
 	TotalAmount   float64        `json:"total_amount" gorm:"not null"`
 	Status        string         `json:"status" gorm:"default:'paid'"`
+	PaymentMethod string         `json:"payment_method" gorm:"default:'Cash'"`
 	InvoiceNumber string         `json:"invoice_number"`
 	CreatedByID   *uint          `json:"created_by_id"`
 	CreatedBy     *User          `json:"created_by" gorm:"foreignKey:CreatedByID"`

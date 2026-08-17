@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func CreatePayment(customerID, WifiPackageID, createdByID uint) (*models.Payment, *utils.AppError) {
+func CreatePayment(customerID, WifiPackageID, createdByID uint, paymentMethod string) (*models.Payment, *utils.AppError) {
 	var customer models.User
 	if err := config.DB.First(&customer, customerID).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Pelanggan tidak ditemukan")
@@ -40,6 +40,7 @@ func CreatePayment(customerID, WifiPackageID, createdByID uint) (*models.Payment
 		PPN:           ppn,
 		TotalAmount:   totalAmount,
 		Status:        "paid",
+		PaymentMethod: paymentMethod,
 		InvoiceNumber: invoiceNumber,
 		CreatedByID:   &createdByID,
 	}
@@ -75,7 +76,7 @@ func GetAllPayments() ([]models.Payment, *utils.AppError) {
 	return payments, nil
 }
 
-func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, *utils.AppError) {
+func UpdatePayment(id string, customerID, wifiPackageID uint, paymentMethod string) (*models.Payment, *utils.AppError) {
 	var payment models.Payment
 	if err := config.DB.First(&payment, id).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Pembayaran tidak ditemukan")
@@ -103,6 +104,7 @@ func UpdatePayment(id string, customerID, wifiPackageID uint) (*models.Payment, 
 	payment.PackagePrice = packagePrice
 	payment.PPN = ppn
 	payment.TotalAmount = totalAmount
+	payment.PaymentMethod = paymentMethod
 
 	if err := config.DB.Save(&payment).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui pembayaran")

@@ -12,8 +12,9 @@ import (
 
 func CreatePayment(c *gin.Context) {
 	var input struct {
-		CustomerID    uint `json:"customer_id" binding:"required"`
-		WifiPackageID uint `json:"wifi_package_id" binding:"required"`
+		CustomerID    uint   `json:"customer_id" binding:"required"`
+		WifiPackageID uint   `json:"wifi_package_id" binding:"required"`
+		PaymentMethod string `json:"payment_method" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -24,7 +25,7 @@ func CreatePayment(c *gin.Context) {
 	userIDClaim, _ := c.Get("userID")
 	userID := uint(userIDClaim.(float64))
 
-	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiPackageID, userID)
+	payment, appErr := services.CreatePayment(input.CustomerID, input.WifiPackageID, userID, input.PaymentMethod)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -143,8 +144,9 @@ func GetAllPayments(c *gin.Context) {
 
 func UpdatePayment(c *gin.Context) {
 	var input struct {
-		CustomerID    uint `json:"customer_id" binding:"required"`
-		WifiPackageID uint `json:"wifi_package_id" binding:"required"`
+		CustomerID    uint   `json:"customer_id" binding:"required"`
+		WifiPackageID uint   `json:"wifi_package_id" binding:"required"`
+		PaymentMethod string `json:"payment_method" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -153,7 +155,7 @@ func UpdatePayment(c *gin.Context) {
 	}
 
 	paymentID := c.Param("id")
-	payment, appErr := services.UpdatePayment(paymentID, input.CustomerID, input.WifiPackageID)
+	payment, appErr := services.UpdatePayment(paymentID, input.CustomerID, input.WifiPackageID, input.PaymentMethod)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
