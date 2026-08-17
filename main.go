@@ -56,7 +56,7 @@ func main() {
 	c := cron.New(cron.WithLocation(locWIB))
 
 	// Holiday check and auto checkout
-	c.AddFunc("31 12 * * *", helpers.CheckAutoHoliday)
+	c.AddFunc("1 12 * * *", helpers.CheckAutoHoliday)
 	c.AddFunc("1 17 * * *", helpers.AutoCheckout)
 
 	c.Start()

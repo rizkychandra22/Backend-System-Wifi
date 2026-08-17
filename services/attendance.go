@@ -43,7 +43,7 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 	// Cek apakah hari ini libur otomatis
 	var checkHoliday models.Attendance
 	if err := config.DB.Where("date = ? AND status = ?", dateStr, models.StatusLibur).First(&checkHoliday).Error; err == nil {
-		return nil, utils.NewAppError(http.StatusForbidden, "Hari ini sudah dinyatakan libur karena tidak ada yang absen masuk hingga jam 12:30")
+		return nil, utils.NewAppError(http.StatusForbidden, "Hari ini sudah dinyatakan libur karena tidak ada yang absen masuk hingga jam 12:00")
 	}
 
 	// Cek apakah sudah absen hari ini
@@ -52,10 +52,10 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 		return nil, utils.NewAppError(http.StatusConflict, "Anda sudah melakukan absen hari ini")
 	}
 
-	// Batas absen masuk adalah jam 12:30
-	time1230 := time.Date(now.Year(), now.Month(), now.Day(), 12, 30, 0, 0, locWIB)
-	if now.After(time1230) {
-		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen masuk telah lewat (12:30)")
+	// Batas absen masuk adalah jam 12:00
+	time1200 := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, locWIB)
+	if now.After(time1200) {
+		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen masuk telah lewat (12:00)")
 	}
 
 	// Validasi Jarak (maksimal 100 meter dari kantor)
@@ -70,14 +70,15 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 
 	// Tentukan Grade
 	var grade string
+	time750 := time.Date(now.Year(), now.Month(), now.Day(), 7, 50, 0, 0, locWIB)
 	time800 := time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, locWIB)
-	time805 := time.Date(now.Year(), now.Month(), now.Day(), 8, 5, 0, 0, locWIB)
+	time810 := time.Date(now.Year(), now.Month(), now.Day(), 8, 10, 0, 0, locWIB)
 
-	if now.Before(time800) {
+	if now.Before(time750) || now.Equal(time750) {
 		grade = "Disiplin"
-	} else if now.Equal(time800) {
+	} else if (now.After(time750) && now.Before(time800)) || now.Equal(time800) {
 		grade = "Tepat Waktu"
-	} else if now.Before(time805) || now.Equal(time805) {
+	} else if (now.After(time800) && now.Before(time810)) || now.Equal(time810) {
 		grade = "Toleransi Terlambat"
 	} else {
 		grade = "Terlambat"
@@ -176,10 +177,10 @@ func RequestIzin(userID float64, notes string) (*models.Attendance, *utils.AppEr
 		}
 		return &existing, nil
 	} else {
-		// Izin sebelum absen masuk (Harus sebelum 12:30)
-		time1230 := time.Date(now.Year(), now.Month(), now.Day(), 12, 30, 0, 0, locWIB)
-		if now.After(time1230) {
-			return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu pengajuan izin full-day (12:30) telah lewat. Jika sudah masuk, pastikan absen masuk terlebih dahulu.")
+		// Izin sebelum absen masuk (Harus sebelum 12:00)
+		time1200 := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, locWIB)
+		if now.After(time1200) {
+			return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu pengajuan izin full-day (12:00) telah lewat. Jika sudah masuk, pastikan absen masuk terlebih dahulu.")
 		}
 
 		attendance := models.Attendance{
