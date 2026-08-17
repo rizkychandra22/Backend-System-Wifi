@@ -20,17 +20,20 @@ func main() {
 	db := config.ConnectDatabase()
 
 	// Auto Migrate Schema
-	if err := db.AutoMigrate(&models.User{}, &models.DeviceLockout{}, &models.Attendance{}, &models.WifiPackage{}, &models.Payment{}, &models.Overtime{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.User{},
+		&models.DeviceLockout{},
+		&models.Attendance{},
+		&models.WifiPackage{},
+		&models.Payment{},
+		&models.Overtime{},
+	); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
 	log.Println("Migrasi database berhasil")
 
-	// Seed Initial Data
 	seeder.SeedAdminUser(db)
-
-	// Backfill Data Consistency
 	helpers.BackfillRegisteredBy()
-
 	r := gin.Default()
 
 	// Enable CORS untuk semua origin dan izinkan header Authorization
@@ -51,15 +54,12 @@ func main() {
 	// Setup Scheduler for Attendance
 	locWIB, _ := time.LoadLocation("Asia/Jakarta")
 	c := cron.New(cron.WithLocation(locWIB))
-	
-	// Cek hari libur jam 08:31 setiap hari
-	c.AddFunc("31 8 * * *", helpers.CheckAutoHoliday)
 
-	// Cek auto absen keluar jam 17:01 setiap hari
+	// Holiday check and auto checkout
+	c.AddFunc("31 8 * * *", helpers.CheckAutoHoliday)
 	c.AddFunc("1 17 * * *", helpers.AutoCheckout)
 
 	c.Start()
-
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
