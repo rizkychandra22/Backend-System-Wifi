@@ -36,19 +36,19 @@ func CreateOvertime(c *gin.Context) {
 		targetUserID = input.UserID
 	}
 
-	dateParsed, err := time.Parse("2006-01-02", input.Date)
+	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
 	}
 
-	startTimeParsed, err := time.Parse("2006-01-02 15:04", input.Date+" "+input.StartTime)
+	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam mulai salah, gunakan HH:mm"})
 		return
 	}
 
-	endTimeParsed, err := time.Parse("2006-01-02 15:04", input.Date+" "+input.EndTime)
+	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam selesai salah, gunakan HH:mm"})
 		return
@@ -127,19 +127,19 @@ func UpdateOvertime(c *gin.Context) {
 		return
 	}
 
-	dateParsed, err := time.Parse("2006-01-02", input.Date)
+	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
 	}
 
-	startTimeParsed, err := time.Parse("2006-01-02 15:04", input.Date+" "+input.StartTime)
+	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam mulai salah, gunakan HH:mm"})
 		return
 	}
 
-	endTimeParsed, err := time.Parse("2006-01-02 15:04", input.Date+" "+input.EndTime)
+	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, time.Local)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam selesai salah, gunakan HH:mm"})
 		return
