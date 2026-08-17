@@ -43,7 +43,7 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 	// Cek apakah hari ini libur otomatis
 	var checkHoliday models.Attendance
 	if err := config.DB.Where("date = ? AND status = ?", dateStr, models.StatusLibur).First(&checkHoliday).Error; err == nil {
-		return nil, utils.NewAppError(http.StatusForbidden, "Hari ini sudah dinyatakan libur karena tidak ada yang absen masuk hingga jam 08:30")
+		return nil, utils.NewAppError(http.StatusForbidden, "Hari ini sudah dinyatakan libur karena tidak ada yang absen masuk hingga jam 12:30")
 	}
 
 	// Cek apakah sudah absen hari ini
@@ -52,10 +52,10 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 		return nil, utils.NewAppError(http.StatusConflict, "Anda sudah melakukan absen hari ini")
 	}
 
-	// Batas absen masuk adalah jam 08:30
-	time830 := time.Date(now.Year(), now.Month(), now.Day(), 8, 30, 0, 0, locWIB)
-	if now.After(time830) {
-		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen masuk telah lewat (08:30)")
+	// Batas absen masuk adalah jam 12:30
+	time1230 := time.Date(now.Year(), now.Month(), now.Day(), 12, 30, 0, 0, locWIB)
+	if now.After(time1230) {
+		return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu absen masuk telah lewat (12:30)")
 	}
 
 	// Validasi Jarak (maksimal 100 meter dari kantor)
@@ -176,10 +176,10 @@ func RequestIzin(userID float64, notes string) (*models.Attendance, *utils.AppEr
 		}
 		return &existing, nil
 	} else {
-		// Izin sebelum absen masuk (Harus sebelum 08:30)
-		time830 := time.Date(now.Year(), now.Month(), now.Day(), 8, 30, 0, 0, locWIB)
-		if now.After(time830) {
-			return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu pengajuan izin full-day (08:30) telah lewat. Jika sudah masuk, pastikan absen masuk terlebih dahulu.")
+		// Izin sebelum absen masuk (Harus sebelum 12:30)
+		time1230 := time.Date(now.Year(), now.Month(), now.Day(), 12, 30, 0, 0, locWIB)
+		if now.After(time1230) {
+			return nil, utils.NewAppError(http.StatusForbidden, "Batas waktu pengajuan izin full-day (12:30) telah lewat. Jika sudah masuk, pastikan absen masuk terlebih dahulu.")
 		}
 
 		attendance := models.Attendance{
