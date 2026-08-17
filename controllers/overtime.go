@@ -3,6 +3,7 @@ package controllers
 import (
 	"backend-wifi/models"
 	"backend-wifi/services"
+	"backend-wifi/utils"
 	"net/http"
 	"time"
 
@@ -71,7 +72,7 @@ func GetOvertimes(c *gin.Context) {
 	userID := uint(userIDVal.(float64))
 
 	var overtimes []models.Overtime
-	var appErr error
+	var appErr *utils.AppError
 
 	if userRole == string(models.RoleAdmin) {
 		overtimes, appErr = services.GetAllOvertimes()
