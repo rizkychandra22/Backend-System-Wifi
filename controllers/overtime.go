@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"backend-wifi/config"
 	"backend-wifi/models"
 	"backend-wifi/services"
 	"backend-wifi/utils"
@@ -36,19 +37,19 @@ func CreateOvertime(c *gin.Context) {
 		targetUserID = input.UserID
 	}
 
-	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, time.Local)
+	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
 	}
 
-	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
+	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam mulai salah, gunakan HH:mm"})
 		return
 	}
 
-	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, time.Local)
+	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam selesai salah, gunakan HH:mm"})
 		return
@@ -127,19 +128,19 @@ func UpdateOvertime(c *gin.Context) {
 		return
 	}
 
-	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, time.Local)
+	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
 	}
 
-	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, time.Local)
+	startTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.StartTime, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam mulai salah, gunakan HH:mm"})
 		return
 	}
 
-	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, time.Local)
+	endTimeParsed, err := time.ParseInLocation("2006-01-02 15:04", input.Date+" "+input.EndTime, config.ZonaWaktu)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format jam selesai salah, gunakan HH:mm"})
 		return
