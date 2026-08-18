@@ -19,13 +19,19 @@ func CheckAutoHoliday() {
 
 		for _, u := range users {
 			uid := u.ID
-			holiday := models.Attendance{
-				UserID: &uid,
-				Date:   dateStr,
-				Status: models.StatusLibur,
-				Grade:  "-",
+
+			var existingCount int64
+			config.DB.Model(&models.Attendance{}).Where("user_id = ? AND date = ?", uid, dateStr).Count(&existingCount)
+
+			if existingCount == 0 {
+				holiday := models.Attendance{
+					UserID: &uid,
+					Date:   dateStr,
+					Status: models.StatusLibur,
+					Grade:  "-",
+				}
+				config.DB.Create(&holiday)
 			}
-			config.DB.Create(&holiday)
 		}
 		log.Println("Hari ini dinyatakan Libur untuk semua karyawan oleh Sistem")
 	}
