@@ -7,11 +7,13 @@ import (
 )
 
 func SetupWifiPackageRoutes(r *gin.Engine) {
+	// Public GET route
+	r.GET("/api/admin/wifi-packages", controllers.GetWifiPackages)
+
+	// Protected write routes
 	wsRoutes := r.Group("/api/admin/wifi-packages")
 	wsRoutes.Use(middlewares.RequireAuth)
 	{
-		wsRoutes.GET("", controllers.GetWifiPackages)
-
 		adminRoutes := wsRoutes.Group("")
 		adminRoutes.Use(middlewares.RequireRole("admin"))
 		{
