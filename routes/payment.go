@@ -18,6 +18,5 @@ func SetupPaymentRoutes(r *gin.Engine) {
 		
 		// History & PDF (Admin & Employee? Actually Customer & Admin)
 		paymentRoutes.GET("/history/:customer_id", controllers.GetCustomerPayments)
-		paymentRoutes.GET("/invoice/:id/pdf", controllers.GeneratePaymentPDF)
 	}
 }
