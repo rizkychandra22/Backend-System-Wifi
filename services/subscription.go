@@ -4,8 +4,11 @@ import (
 	"backend-wifi/config"
 	"backend-wifi/models"
 	"backend-wifi/utils"
+	"errors"
 	"net/http"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 func CreateOrUpdateSubscription(customerID uint, wifiPackageID uint, billingDay int, nextDueDate time.Time, status string, createdByID uint) (*models.Subscription, *utils.AppError) {
@@ -67,7 +70,10 @@ func GetSubscriptionByCustomerID(customerID string) (*models.Subscription, *util
 	var sub models.Subscription
 	err := config.DB.Preload("WifiPackage").Preload("Customer").Preload("CreatedBy").Where("customer_id = ?", customerID).First(&sub).Error
 	if err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Data langganan aktif tidak ditemukan")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data langganan")
 	}
 	return &sub, nil
 }

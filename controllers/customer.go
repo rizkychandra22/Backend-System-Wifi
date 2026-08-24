@@ -36,6 +36,11 @@ func GetCustomerSubscription(c *gin.Context) {
 		return
 	}
 
+	if subscription == nil {
+		c.JSON(http.StatusOK, gin.H{"data": nil})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"data": subscription})
 }
 
