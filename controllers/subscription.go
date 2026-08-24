@@ -92,3 +92,26 @@ func GetAllSubscriptions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": subscriptions})
 }
+
+func DeleteSubscription(c *gin.Context) {
+	id := c.Param("id")
+
+	userRoleClaim, exists := c.Get("userRole")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userRole := userRoleClaim.(string)
+	if userRole != string(models.RoleAdmin) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Hanya admin yang diperbolehkan menghapus data langganan"})
+		return
+	}
+
+	appErr := services.DeleteSubscription(id)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Data langganan berhasil dihapus"})
+}

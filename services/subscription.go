@@ -79,3 +79,16 @@ func GetAllSubscriptions() ([]models.Subscription, *utils.AppError) {
 	}
 	return subs, nil
 }
+
+func DeleteSubscription(id string) *utils.AppError {
+	var sub models.Subscription
+	if err := config.DB.First(&sub, id).Error; err != nil {
+		return utils.NewAppError(http.StatusNotFound, "Data langganan tidak ditemukan")
+	}
+
+	if err := config.DB.Delete(&sub).Error; err != nil {
+		return utils.NewAppError(http.StatusInternalServerError, "Gagal menghapus data langganan")
+	}
+
+	return nil
+}

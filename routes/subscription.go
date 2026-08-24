@@ -14,6 +14,7 @@ func SetupSubscriptionRoutes(r *gin.Engine) {
 		// Admin & Employee can manage subscriptions
 		subRoutes.GET("", middlewares.RequireRole("admin", "employee"), controllers.GetAllSubscriptions)
 		subRoutes.POST("", middlewares.RequireRole("admin", "employee"), controllers.CreateOrUpdateSubscription)
+		subRoutes.DELETE("/:id", middlewares.RequireRole("admin"), controllers.DeleteSubscription)
 
 		// Customers can get their own, Admin & Employee can get any
 		subRoutes.GET("/customer/:id", controllers.GetSubscriptionByCustomerID)
