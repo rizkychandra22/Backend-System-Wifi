@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CreateOrUpdateSubscription(customerID uint, wifiPackageID uint, billingDay int, nextDueDate time.Time, status string) (*models.Subscription, *utils.AppError) {
+func CreateOrUpdateSubscription(customerID uint, wifiPackageID uint, billingDay int, nextDueDate time.Time, status string, createdByID uint) (*models.Subscription, *utils.AppError) {
 	// 1. Validasi customer ada dan role-nya customer
 	var customer models.User
 	if err := config.DB.First(&customer, customerID).Error; err != nil {
@@ -51,6 +51,7 @@ func CreateOrUpdateSubscription(customerID uint, wifiPackageID uint, billingDay 
 			BillingDay:    billingDay,
 			NextDueDate:   nextDueDate,
 			Status:        status,
+			CreatedByID:   &createdByID,
 		}
 		if err := config.DB.Create(&sub).Error; err != nil {
 			return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal membuat langganan baru")
@@ -58,13 +59,13 @@ func CreateOrUpdateSubscription(customerID uint, wifiPackageID uint, billingDay 
 	}
 
 	// Preload data lengkap untuk response
-	config.DB.Preload("WifiPackage").Preload("Customer").First(&sub, sub.ID)
+	config.DB.Preload("WifiPackage").Preload("Customer").Preload("CreatedBy").First(&sub, sub.ID)
 	return &sub, nil
 }
 
 func GetSubscriptionByCustomerID(customerID string) (*models.Subscription, *utils.AppError) {
 	var sub models.Subscription
-	err := config.DB.Preload("WifiPackage").Preload("Customer").Where("customer_id = ?", customerID).First(&sub).Error
+	err := config.DB.Preload("WifiPackage").Preload("Customer").Preload("CreatedBy").Where("customer_id = ?", customerID).First(&sub).Error
 	if err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Data langganan aktif tidak ditemukan")
 	}
@@ -73,7 +74,7 @@ func GetSubscriptionByCustomerID(customerID string) (*models.Subscription, *util
 
 func GetAllSubscriptions() ([]models.Subscription, *utils.AppError) {
 	var subs []models.Subscription
-	err := config.DB.Preload("WifiPackage").Preload("Customer").Order("created_at DESC").Find(&subs).Error
+	err := config.DB.Preload("WifiPackage").Preload("Customer").Preload("CreatedBy").Order("created_at DESC").Find(&subs).Error
 	if err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil semua data langganan")
 	}
