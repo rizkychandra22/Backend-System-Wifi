@@ -24,12 +24,20 @@ func CreateOrUpdateSubscription(c *gin.Context) {
 		return
 	}
 
+	userIDClaim, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := uint(userIDClaim.(float64))
+
 	subscription, appErr := services.CreateOrUpdateSubscription(
 		input.CustomerID,
 		input.WifiPackageID,
 		input.BillingDay,
 		input.NextDueDate,
 		input.Status,
+		userID,
 	)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
