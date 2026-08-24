@@ -8,12 +8,12 @@ import (
 )
 
 
-func GetCustomerSubscription(customerID string) (*models.WifiPackage, *utils.AppError) {
-	var payment models.Payment
-	err := config.DB.Preload("WifiPackage").Where("customer_id = ?", customerID).Order("created_at desc").First(&payment).Error
+func GetCustomerSubscription(customerID string) (*models.Subscription, *utils.AppError) {
+	var sub models.Subscription
+	err := config.DB.Preload("WifiPackage").Preload("Customer").Where("customer_id = ?", customerID).First(&sub).Error
 	if err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Tidak ditemukan langganan aktif")
 	}
-	return payment.WifiPackage, nil
+	return &sub, nil
 }
 
