@@ -162,6 +162,11 @@ func RequestIzin(userID float64, notes string) (*models.Attendance, *utils.AppEr
 		if existing.Status != models.StatusProses {
 			return nil, utils.NewAppError(http.StatusConflict, "Status absen tidak valid untuk mengajukan izin (sudah selesai atau libur)")
 		}
+
+		time1200 := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, locWIB)
+		if now.Before(time1200) {
+			return nil, utils.NewAppError(http.StatusForbidden, "Izin setengah hari (Halfday) hanya dapat diajukan setelah batas jam 12:00 siang.")
+		}
 		
 		existing.Status = models.StatusIzin
 		existing.ClockOut = &now

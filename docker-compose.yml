@@ -1,0 +1,16 @@
+services:
+  wifi-api-prod:
+    build: .
+    image: wifi-api:prod
+    container_name: wifi-api-prod
+    restart: unless-stopped
+    env_file: .env.prod
+    network_mode: host
+
+  wifi-api-dev:
+    build: .
+    image: wifi-api:dev
+    container_name: wifi-api-dev
+    restart: unless-stopped
+    env_file: .env.dev
+    network_mode: host

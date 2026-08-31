@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"time"
 )
 
 func CreatePayment(customerID, WifiPackageID, createdByID uint, paymentMethod string) (*models.Payment, *utils.AppError) {
@@ -19,12 +20,25 @@ func CreatePayment(customerID, WifiPackageID, createdByID uint, paymentMethod st
 		return nil, utils.NewAppError(http.StatusBadRequest, "Pengguna bukan pelanggan")
 	}
 
-	var ws models.WifiPackage
-	if err := config.DB.First(&ws, WifiPackageID).Error; err != nil {
-		return nil, utils.NewAppError(http.StatusNotFound, "Layanan WiFi tidak ditemukan")
+	// 1. Dapatkan data langganan aktif pelanggan
+	var sub models.Subscription
+	if err := config.DB.Preload("WifiPackage").Where("customer_id = ? AND status = ?", customerID, "active").First(&sub).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusForbidden, "Pelanggan tidak memiliki langganan aktif atau langganan telah dinonaktifkan")
 	}
 
-	totalAmount := ws.Price
+	// 2. Validasi Lock 14 Hari berdasarkan pembayaran terakhir
+	var latestPayment models.Payment
+	errLatest := config.DB.Where("customer_id = ?", customerID).Order("created_at desc").First(&latestPayment).Error
+	if errLatest == nil {
+		if time.Since(latestPayment.CreatedAt).Hours() < 14*24 {
+			nextInputDate := latestPayment.CreatedAt.AddDate(0, 0, 14)
+			return nil, utils.NewAppError(http.StatusForbidden, fmt.Sprintf("Pembayaran terkunci. Pembayaran terakhir baru diinput pada %s. Penginputan kembali baru dapat dilakukan setelah 14 hari (mulai %s).", latestPayment.CreatedAt.Format("02-01-2006"), nextInputDate.Format("02-01-2006")))
+		}
+	}
+
+	// Gunakan paket WiFi dari langganan aktif (mengabaikan parameter WifiPackageID agar tidak dimanipulasi)
+	activePackage := sub.WifiPackage
+	totalAmount := activePackage.Price
 	ppn := totalAmount * 0.11
 	packagePrice := totalAmount - ppn
 
@@ -35,7 +49,7 @@ func CreatePayment(customerID, WifiPackageID, createdByID uint, paymentMethod st
 
 	payment := models.Payment{
 		CustomerID:    customerID,
-		WifiPackageID: WifiPackageID,
+		WifiPackageID: sub.WifiPackageID,
 		PackagePrice:  packagePrice,
 		PPN:           ppn,
 		TotalAmount:   totalAmount,
@@ -45,8 +59,15 @@ func CreatePayment(customerID, WifiPackageID, createdByID uint, paymentMethod st
 		CreatedByID:   &createdByID,
 	}
 
+	// Simpan transaksi pembayaran
 	if err := config.DB.Create(&payment).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mencatat pembayaran")
+	}
+
+	// 3. Majukan tanggal jatuh tempo (NextDueDate) langganan 1 bulan ke depan
+	sub.NextDueDate = sub.NextDueDate.AddDate(0, 1, 0)
+	if err := config.DB.Save(&sub).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui tanggal jatuh tempo langganan")
 	}
 
 	return &payment, nil

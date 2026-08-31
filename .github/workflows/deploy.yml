@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, development]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, api-wifi]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore env file
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            cp /www/wwwroot/api-wifi/.env.prod .env.prod
+          else
+            cp /www/wwwroot/api-wifi/.env.dev .env.dev
+          fi
+
+      - name: Deploy container
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            SVC=wifi-api-prod
+          else
+            SVC=wifi-api-dev
+          fi
+          docker compose build $SVC
+          docker compose up -d --force-recreate $SVC
+
+      - name: Health check
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then PORT=8080; else PORT=8081; fi
+          sleep 5
+          curl -fsS -m 10 http://127.0.0.1:$PORT/api/health
