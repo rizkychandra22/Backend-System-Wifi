@@ -12,7 +12,7 @@ type Overtime struct {
 	User        *User          `json:"user,omitempty" gorm:"foreignKey:UserID"`
 	Title       string         `json:"title" gorm:"not null"`
 	Description string         `json:"description" gorm:"type:text"`
-	Date        time.Time      `json:"date" gorm:"type:date"`
+	Date        string         `json:"date" gorm:"type:varchar(10);not null"`
 	StartTime   time.Time      `json:"start_time"`
 	EndTime     time.Time      `json:"end_time"`
 	Price       float64        `json:"price" gorm:"not null"`
