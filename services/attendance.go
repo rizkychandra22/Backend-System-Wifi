@@ -6,6 +6,7 @@ import (
 	"backend-wifi/utils"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -229,4 +230,108 @@ func GetAllAttendance() ([]models.Attendance, *utils.AppError) {
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mengambil data absen")
 	}
 	return records, nil
+}
+
+type UpdateAttendanceInput struct {
+	ClockIn  *string `json:"clock_in"`
+	ClockOut *string `json:"clock_out"`
+	Grade    *string `json:"grade"`
+	Status   *string `json:"status"`
+	Notes    *string `json:"notes"`
+}
+
+func UpdateAttendance(id string, input UpdateAttendanceInput) (*models.Attendance, *utils.AppError) {
+	var attendance models.Attendance
+	if err := config.DB.Preload("User").First(&attendance, id).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusNotFound, "Data absensi tidak ditemukan")
+	}
+
+	attendanceDate, err := time.ParseInLocation("2006-01-02", attendance.Date, locWIB)
+	if err != nil {
+		attendanceDate = time.Now().In(locWIB)
+	}
+
+	// Update ClockIn
+	if input.ClockIn != nil {
+		str := strings.TrimSpace(*input.ClockIn)
+		if str == "" {
+			attendance.ClockIn = nil
+		} else {
+			if t, err := time.ParseInLocation("15:04", str, locWIB); err == nil {
+				parsed := time.Date(attendanceDate.Year(), attendanceDate.Month(), attendanceDate.Day(), t.Hour(), t.Minute(), 0, 0, locWIB)
+				attendance.ClockIn = &parsed
+			} else if t, err := time.ParseInLocation("15:04:05", str, locWIB); err == nil {
+				parsed := time.Date(attendanceDate.Year(), attendanceDate.Month(), attendanceDate.Day(), t.Hour(), t.Minute(), t.Second(), 0, locWIB)
+				attendance.ClockIn = &parsed
+			} else if t, err := time.Parse(time.RFC3339, str); err == nil {
+				tInLoc := t.In(locWIB)
+				attendance.ClockIn = &tInLoc
+			} else {
+				return nil, utils.NewAppError(http.StatusBadRequest, "Format jam masuk tidak valid (gunakan format HH:mm)")
+			}
+		}
+	}
+
+	// Update ClockOut
+	if input.ClockOut != nil {
+		str := strings.TrimSpace(*input.ClockOut)
+		if str == "" {
+			attendance.ClockOut = nil
+		} else {
+			if t, err := time.ParseInLocation("15:04", str, locWIB); err == nil {
+				parsed := time.Date(attendanceDate.Year(), attendanceDate.Month(), attendanceDate.Day(), t.Hour(), t.Minute(), 0, 0, locWIB)
+				attendance.ClockOut = &parsed
+			} else if t, err := time.ParseInLocation("15:04:05", str, locWIB); err == nil {
+				parsed := time.Date(attendanceDate.Year(), attendanceDate.Month(), attendanceDate.Day(), t.Hour(), t.Minute(), t.Second(), 0, locWIB)
+				attendance.ClockOut = &parsed
+			} else if t, err := time.Parse(time.RFC3339, str); err == nil {
+				tInLoc := t.In(locWIB)
+				attendance.ClockOut = &tInLoc
+			} else {
+				return nil, utils.NewAppError(http.StatusBadRequest, "Format jam keluar tidak valid (gunakan format HH:mm)")
+			}
+		}
+	}
+
+	// Update Grade
+	if input.Grade != nil && strings.TrimSpace(*input.Grade) != "" {
+		attendance.Grade = strings.TrimSpace(*input.Grade)
+	} else if attendance.ClockIn != nil {
+		cIn := *attendance.ClockIn
+		time750 := time.Date(cIn.Year(), cIn.Month(), cIn.Day(), 7, 50, 0, 0, locWIB)
+		time800 := time.Date(cIn.Year(), cIn.Month(), cIn.Day(), 8, 0, 0, 0, locWIB)
+		time810 := time.Date(cIn.Year(), cIn.Month(), cIn.Day(), 8, 10, 0, 0, locWIB)
+
+		if cIn.Before(time750) || cIn.Equal(time750) {
+			attendance.Grade = "Disiplin"
+		} else if (cIn.After(time750) && cIn.Before(time800)) || cIn.Equal(time800) {
+			attendance.Grade = "Tepat Waktu"
+		} else if (cIn.After(time800) && cIn.Before(time810)) || cIn.Equal(time810) {
+			attendance.Grade = "Toleransi Terlambat"
+		} else {
+			attendance.Grade = "Terlambat"
+		}
+	}
+
+	// Update Status
+	if input.Status != nil && strings.TrimSpace(*input.Status) != "" {
+		attendance.Status = models.AttendanceStatus(strings.TrimSpace(*input.Status))
+	} else {
+		if attendance.ClockIn != nil && attendance.ClockOut != nil {
+			attendance.Status = models.StatusHadir
+		} else if attendance.ClockIn != nil && attendance.ClockOut == nil {
+			attendance.Status = models.StatusProses
+		}
+	}
+
+	// Update Notes
+	if input.Notes != nil {
+		attendance.Notes = input.Notes
+	}
+
+	if err := config.DB.Save(&attendance).Error; err != nil {
+		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal memperbarui data absensi")
+	}
+
+	return &attendance, nil
 }
