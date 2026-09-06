@@ -4,6 +4,7 @@ import (
 	"backend-wifi/config"
 	"backend-wifi/models"
 	"backend-wifi/utils"
+	"math"
 	"net/http"
 	"time"
 )
@@ -14,7 +15,7 @@ func CreateOvertime(userID uint, title, description, date string, startTime, end
 	if durationMinutes < 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "Waktu selesai harus lebih besar dari waktu mulai")
 	}
-	price := (durationMinutes / 60.0) * 5000.0
+	price := math.Round((durationMinutes / 60.0) * 5000.0)
 
 	overtime := models.Overtime{
 		UserID:      userID,
@@ -67,7 +68,7 @@ func UpdateOvertime(id string, title, description, date string, startTime, endTi
 	if durationMinutes < 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "Waktu selesai harus lebih besar dari waktu mulai")
 	}
-	price := (durationMinutes / 60.0) * 5000.0
+	price := math.Round((durationMinutes / 60.0) * 5000.0)
 
 	overtime.Title = title
 	overtime.Description = description
