@@ -22,13 +22,10 @@ jobs:
           cd /www/wwwroot/api-wifi
           if [ "${{ github.ref_name }}" = "main" ]; then
             SVC=wifi-api-prod
-            ENV=.env.prod
           else
             SVC=wifi-api-dev
-            ENV=.env.dev
           fi
-          echo "ENV=$ENV" > /tmp/api-wifi-env
-          echo "SVC=$SVC" >> /tmp/api-wifi-env
+          echo "SVC=$SVC" > /tmp/api-wifi-env
 
       - name: Build & restart
         run: |
