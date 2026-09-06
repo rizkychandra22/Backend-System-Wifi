@@ -28,6 +28,7 @@ func main() {
 		&models.Payment{},
 		&models.Overtime{},
 		&models.Subscription{},
+		&models.Allowance{},
 	); err != nil {
 		log.Fatalf("Gagal melakukan migrasi database: %v", err)
 	}
@@ -52,6 +53,7 @@ func main() {
 	routes.SetupPaymentRoutes(r)
 	routes.SetupOvertimeRoutes(r)
 	routes.SetupSubscriptionRoutes(r)
+	routes.SetupAllowanceRoutes(r)
 
 	// Setup Scheduler for Attendance
 	locWIB, _ := time.LoadLocation("Asia/Jakarta")
