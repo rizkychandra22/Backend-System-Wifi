@@ -8,28 +8,37 @@ jobs:
   deploy:
     runs-on: [self-hosted, api-wifi]
     steps:
-      - uses: actions/checkout@v4
+      - name: Sync folder live ke commit ini
+        run: |
+          set -euo pipefail
+          cd /www/wwwroot/api-wifi
+          git fetch origin "${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+          git clean -fd -e .env.prod -e .env.dev -e .env
 
       - name: Restore env file
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            cp /www/wwwroot/api-wifi/.env.prod .env.prod
-          else
-            cp /www/wwwroot/api-wifi/.env.dev .env.dev
-          fi
-
-      - name: Deploy container
-        run: |
+          set -euo pipefail
+          cd /www/wwwroot/api-wifi
           if [ "${{ github.ref_name }}" = "main" ]; then
             SVC=wifi-api-prod
           else
             SVC=wifi-api-dev
           fi
-          docker compose build $SVC
-          docker compose up -d --force-recreate $SVC
+          echo "SVC=$SVC" > /tmp/api-wifi-env
+
+      - name: Build & restart
+        run: |
+          set -euo pipefail
+          cd /www/wwwroot/api-wifi
+          source /tmp/api-wifi-env
+          docker compose build "$SVC"
+          docker compose up -d --force-recreate "$SVC"
 
       - name: Health check
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then PORT=8080; else PORT=8081; fi
+          set -euo pipefail
+          source /tmp/api-wifi-env
+          if [ "$SVC" = "wifi-api-prod" ]; then PORT=8080; else PORT=8081; fi
           sleep 5
-          curl -fsS -m 10 http://127.0.0.1:$PORT/api/health
+          curl -fsS -m 10 "http://127.0.0.1:$PORT/api/health"
