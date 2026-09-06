@@ -37,7 +37,7 @@ func CreateOvertime(c *gin.Context) {
 		targetUserID = input.UserID
 	}
 
-	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, config.ZonaWaktu)
+	_, err := time.Parse("2006-01-02", input.Date)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
@@ -55,7 +55,7 @@ func CreateOvertime(c *gin.Context) {
 		return
 	}
 
-	overtime, appErr := services.CreateOvertime(targetUserID, input.Title, input.Description, dateParsed, startTimeParsed, endTimeParsed)
+	overtime, appErr := services.CreateOvertime(targetUserID, input.Title, input.Description, input.Date, startTimeParsed, endTimeParsed)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return
@@ -128,7 +128,7 @@ func UpdateOvertime(c *gin.Context) {
 		return
 	}
 
-	dateParsed, err := time.ParseInLocation("2006-01-02", input.Date, config.ZonaWaktu)
+	_, err := time.Parse("2006-01-02", input.Date)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
 		return
@@ -146,7 +146,7 @@ func UpdateOvertime(c *gin.Context) {
 		return
 	}
 
-	overtime, appErr := services.UpdateOvertime(id, input.Title, input.Description, dateParsed, startTimeParsed, endTimeParsed, input.UserID)
+	overtime, appErr := services.UpdateOvertime(id, input.Title, input.Description, input.Date, startTimeParsed, endTimeParsed, input.UserID)
 	if appErr != nil {
 		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
 		return

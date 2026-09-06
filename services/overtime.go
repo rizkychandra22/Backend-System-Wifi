@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CreateOvertime(userID uint, title, description string, date, startTime, endTime time.Time) (*models.Overtime, *utils.AppError) {
+func CreateOvertime(userID uint, title, description, date string, startTime, endTime time.Time) (*models.Overtime, *utils.AppError) {
 	// Calculate Price: Rp 5.000 / hour, proportional
 	durationMinutes := endTime.Sub(startTime).Minutes()
 	if durationMinutes < 0 {
@@ -57,7 +57,7 @@ func GetOvertimeByID(id string) (*models.Overtime, *utils.AppError) {
 	return &overtime, nil
 }
 
-func UpdateOvertime(id string, title, description string, date, startTime, endTime time.Time, userID uint) (*models.Overtime, *utils.AppError) {
+func UpdateOvertime(id string, title, description, date string, startTime, endTime time.Time, userID uint) (*models.Overtime, *utils.AppError) {
 	var overtime models.Overtime
 	if err := config.DB.First(&overtime, id).Error; err != nil {
 		return nil, utils.NewAppError(http.StatusNotFound, "Data lembur tidak ditemukan")
