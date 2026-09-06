@@ -137,3 +137,25 @@ func GetAllAttendance(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": records})
 }
+
+// UpdateAttendance handler for admin
+func UpdateAttendance(c *gin.Context) {
+	id := c.Param("id")
+
+	var input services.UpdateAttendanceInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format data tidak valid"})
+		return
+	}
+
+	attendance, appErr := services.UpdateAttendance(id, input)
+	if appErr != nil {
+		c.JSON(appErr.StatusCode, gin.H{"error": appErr.Message})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Data absensi berhasil diperbarui",
+		"data":    attendance,
+	})
+}

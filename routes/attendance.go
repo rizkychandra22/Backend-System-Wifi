@@ -26,5 +26,6 @@ func SetupAttendanceRoutes(r *gin.Engine) {
 	adminRoutes.Use(middlewares.RequireRole("admin"))
 	{
 		adminRoutes.GET("/", controllers.GetAllAttendance)
+		adminRoutes.PUT("/:id", controllers.UpdateAttendance)
 	}
 }
