@@ -1,6 +1,8 @@
 services:
   wifi-api-prod:
-    build: .
+    build:
+      context: .
+      network: host
     image: wifi-api:prod
     container_name: wifi-api-prod
     restart: unless-stopped
@@ -8,7 +10,9 @@ services:
     network_mode: host
 
   wifi-api-dev:
-    build: .
+    build:
+      context: .
+      network: host
     image: wifi-api:dev
     container_name: wifi-api-dev
     restart: unless-stopped
