@@ -33,10 +33,10 @@ func Login(phone string, password *string, deviceID string) (map[string]interfac
 			return nil, utils.NewAppError(http.StatusForbidden, "Akun terkunci karena terlalu banyak percobaan salah. Coba lagi dalam 30 menit.")
 		}
 
-		// Cek apakah deviceID ini pernah dipakai login oleh non-admin
-		var nonAdminCount int64
-		config.DB.Model(&models.User{}).Where("role IN ('employee', 'customer') AND device_id = ?", deviceID).Count(&nonAdminCount)
-		if nonAdminCount > 0 {
+		// Cek apakah deviceID ini pernah dipakai login oleh employee
+		var employeeCount int64
+		config.DB.Model(&models.User{}).Where("role = 'employee' AND device_id = ?", deviceID).Count(&employeeCount)
+		if employeeCount > 0 {
 			// Blokir device ini selama 24 jam
 			lockedUntil := time.Now().Add(24 * time.Hour)
 			if lockout.ID != 0 {
@@ -75,17 +75,18 @@ func Login(phone string, password *string, deviceID string) (map[string]interfac
 		user.LockedUntil = nil
 		config.DB.Save(&user)
 
-	} else {
-		// Device Lock Logic (Admin dibebaskan dari lock device)
+	} else if user.Role == "employee" {
+		// Device Lock Logic: Hanya untuk Karyawan (employee) guna menghindari kecurangan absen
 		if user.DeviceID == nil || *user.DeviceID == "" {
 			// First time login, save this DeviceID
 			user.DeviceID = &deviceID
 			config.DB.Save(&user)
 		} else if *user.DeviceID != deviceID {
 			// Device mismatch, block login
-			return nil, utils.NewAppError(http.StatusForbidden, "Akun ini sudah login di device lain. Silakan hubungi Admin.")
+			return nil, utils.NewAppError(http.StatusForbidden, "Akun karyawan ini sudah terdaftar di device lain. Silakan hubungi Admin.")
 		}
 	}
+	// Note: Role 'customer' (pelanggan) dan 'admin' dibebaskan dari device lock sehingga fleksibel login dari berbagai perangkat
 
 	// Generate JWT Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -93,7 +94,7 @@ func Login(phone string, password *string, deviceID string) (map[string]interfac
 		"name":  user.Name,
 		"role":  user.Role,
 		"phone": user.Phone,
-		"exp":   time.Now().Add(time.Hour * 72).Unix(), // 3 days expiration
+		"exp":   time.Now().Add(time.Hour * 3).Unix(), // 3 hours expiration
 	})
 
 	jwtSecret := os.Getenv("JWT_SECRET")

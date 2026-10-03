@@ -97,6 +97,10 @@ func ClockIn(userID float64, lat, lng float64) (*models.Attendance, *utils.AppEr
 	}
 
 	if err := config.DB.Create(&attendance).Error; err != nil {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "duplicate") || strings.Contains(errLower, "unique") {
+			return nil, utils.NewAppError(http.StatusConflict, "Anda sudah melakukan absen hari ini")
+		}
 		return nil, utils.NewAppError(http.StatusInternalServerError, "Gagal mencatat absen masuk")
 	}
 
