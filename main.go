@@ -19,6 +19,18 @@ import (
 func main() {
 	db := config.ConnectDatabase()
 
+	// Bersihkan duplikasi absensi lama jika ada sebelum membuat unique index
+	cleanDuplicateAttendances := `
+		DELETE FROM attendances a
+		USING attendances b
+		WHERE a.id > b.id
+		  AND a.user_id = b.user_id
+		  AND a.date = b.date;
+	`
+	if err := db.Exec(cleanDuplicateAttendances).Error; err != nil {
+		log.Printf("Catatan: Pembersihan awal absensi (bisa dilewati jika tabel baru): %v", err)
+	}
+
 	// Auto Migrate Schema
 	if err := db.AutoMigrate(
 		&models.User{},

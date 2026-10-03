@@ -17,8 +17,8 @@ const (
 
 type Attendance struct {
 	ID          uint             `gorm:"primaryKey" json:"id"`
-	UserID      *uint            `json:"user_id"`
-	Date        string           `gorm:"type:varchar(10);not null" json:"date"`
+	UserID      *uint            `gorm:"uniqueIndex:idx_user_attendance_date" json:"user_id"`
+	Date        string           `gorm:"type:varchar(10);not null;uniqueIndex:idx_user_attendance_date" json:"date"`
 	ClockIn     *time.Time       `json:"clock_in"`
 	ClockOut    *time.Time       `json:"clock_out"`
 	Grade       string           `gorm:"type:varchar(50)" json:"grade"`
