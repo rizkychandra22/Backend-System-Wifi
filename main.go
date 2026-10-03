@@ -48,6 +48,9 @@ func main() {
 
 	seeder.SeedAdminUser(db)
 	helpers.BackfillRegisteredBy()
+
+	// Bebaskan device_id untuk role selain employee (customer dan admin)
+	db.Model(&models.User{}).Where("role != ?", models.RoleEmployee).Update("device_id", nil)
 	r := gin.Default()
 
 	// Enable CORS untuk semua origin dan izinkan header Authorization
