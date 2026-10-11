@@ -19,3 +19,4 @@
 .env.*
 .air.toml
 tmp/
+vendor/

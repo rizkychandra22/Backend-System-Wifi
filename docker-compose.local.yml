@@ -1,0 +1,23 @@
+services:
+  wifi-api-local:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: wifi-api:local
+    container_name: wifi-api-local
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Otomatis mengarahkan host database ke PostgreSQL yang berjalan di laptop/host Windows
+      - DB_HOST=host.docker.internal
+      - PORT=8081
+    ports:
+      - "8081:8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Mount folder project agar Air dapat mendeteksi perubahan kode secara real-time
+      - .:/app
+      # Pisahkan folder binary tmp Linux di dalam container agar tidak bentrok dengan Windows
+      - /app/tmp
