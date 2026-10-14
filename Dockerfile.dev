@@ -1,0 +1,15 @@
+FROM cosmtrek/air:latest AS air-bin
+
+FROM golang:1.25-alpine
+
+# Copy prebuilt Air binary directly (no compile or package download needed)
+COPY --from=air-bin /go/bin/air /usr/local/bin/air
+
+WORKDIR /app
+
+# Copy application code and vendor dependencies
+COPY . .
+
+EXPOSE 8080
+
+CMD ["air", "-c", ".air.toml"]
